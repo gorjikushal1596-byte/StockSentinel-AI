@@ -1,0 +1,6 @@
+store_id,store_name,store_format,city_tier,store_size_sqft
+ST001,Test Store 1,Small,Tier 1,2437
+ST002,Test Store 2,Medium,Tier 2,9626
+ST003,Test Store 3,Large,Tier 3,8373
+ST004,Test Store 4,Small,Tier 1,6108
+ST005,Test Store 5,Medium,Tier 2,6046

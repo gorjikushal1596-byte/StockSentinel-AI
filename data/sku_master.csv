@@ -1,0 +1,51 @@
+sku_id,product_name,category,unit_cost_inr,unit_price_inr,is_slow_moving
+SKU0001,Sample Product 1,Grocery,37.13,390.86,False
+SKU0002,Sample Product 2,Personal Care,199.73,73.04,False
+SKU0003,Sample Product 3,Household,102.14,372.54,False
+SKU0004,Sample Product 4,Beverages,208.35,191.28,False
+SKU0005,Sample Product 5,Snacks,145.33,48.93,False
+SKU0006,Sample Product 6,Grocery,163.44,309.28,False
+SKU0007,Sample Product 7,Personal Care,243.11,359.92,True
+SKU0008,Sample Product 8,Household,60.74,200.02,False
+SKU0009,Sample Product 9,Beverages,51.26,281.14,False
+SKU0010,Sample Product 10,Snacks,242.36,147.18,False
+SKU0011,Sample Product 11,Grocery,125.35,96.05,True
+SKU0012,Sample Product 12,Personal Care,126.79,110.09,False
+SKU0013,Sample Product 13,Household,117.73,337.25,False
+SKU0014,Sample Product 14,Beverages,88.41,337.1,True
+SKU0015,Sample Product 15,Snacks,106.06,133.12,False
+SKU0016,Sample Product 16,Grocery,47.84,99.97,False
+SKU0017,Sample Product 17,Personal Care,199.93,274.32,False
+SKU0018,Sample Product 18,Household,198.47,197.09,False
+SKU0019,Sample Product 19,Beverages,47.85,67.95,False
+SKU0020,Sample Product 20,Snacks,125.71,236.96,False
+SKU0021,Sample Product 21,Grocery,164.16,232.59,True
+SKU0022,Sample Product 22,Personal Care,86.43,36.56,True
+SKU0023,Sample Product 23,Household,65.43,178.2,False
+SKU0024,Sample Product 24,Beverages,69.98,46.86,False
+SKU0025,Sample Product 25,Snacks,83.99,273.22,False
+SKU0026,Sample Product 26,Grocery,199.22,274.12,False
+SKU0027,Sample Product 27,Personal Care,206.29,87.61,False
+SKU0028,Sample Product 28,Household,36.16,295.88,True
+SKU0029,Sample Product 29,Beverages,52.9,212.89,False
+SKU0030,Sample Product 30,Snacks,178.64,192.31,False
+SKU0031,Sample Product 31,Grocery,85.86,261.36,False
+SKU0032,Sample Product 32,Personal Care,35.6,69.25,False
+SKU0033,Sample Product 33,Household,228.52,287.39,True
+SKU0034,Sample Product 34,Beverages,242.76,317.03,False
+SKU0035,Sample Product 35,Snacks,120.6,127.09,True
+SKU0036,Sample Product 36,Grocery,227.11,195.92,False
+SKU0037,Sample Product 37,Personal Care,86.9,242.21,False
+SKU0038,Sample Product 38,Household,216.3,309.44,False
+SKU0039,Sample Product 39,Beverages,116.54,260.24,False
+SKU0040,Sample Product 40,Snacks,167.71,56.67,False
+SKU0041,Sample Product 41,Grocery,24.78,210.25,False
+SKU0042,Sample Product 42,Personal Care,48.96,63.78,True
+SKU0043,Sample Product 43,Household,55.09,371.92,False
+SKU0044,Sample Product 44,Beverages,96.51,246.59,True
+SKU0045,Sample Product 45,Snacks,240.26,205.86,False
+SKU0046,Sample Product 46,Grocery,34.44,207.5,False
+SKU0047,Sample Product 47,Personal Care,235.39,239.4,False
+SKU0048,Sample Product 48,Household,77.74,149.34,False
+SKU0049,Sample Product 49,Beverages,118.14,33.1,True
+SKU0050,Sample Product 50,Snacks,225.6,77.59,False

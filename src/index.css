@@ -1,0 +1,679 @@
+@charset "UTF-8";
+
+/* ==========================================================================
+   StockSentinel AI - Cinematic 3D Theme & Design System
+   ========================================================================== */
+
+:root {
+  /* Color Palette */
+  --bg-darkest: #030712;
+  --bg-deep-navy: #050b18;
+  --bg-surface: rgba(10, 20, 38, 0.72);
+  --bg-surface-elevated: rgba(15, 28, 54, 0.82);
+  --bg-surface-alert: rgba(36, 12, 18, 0.78);
+
+  /* Primary Electric Accents */
+  --cyan-primary: #00f2fe;
+  --cyan-glow: rgba(0, 242, 254, 0.35);
+  --cyan-bright: #38bdf8;
+  --blue-primary: #2563eb;
+  --blue-electric: #0066ff;
+  --blue-glow: rgba(37, 99, 235, 0.35);
+
+  /* Warning Accents */
+  --alert-red: #ef4444;
+  --alert-orange: #f97316;
+  --alert-glow: rgba(239, 68, 68, 0.4);
+  --alert-border: rgba(239, 68, 68, 0.35);
+
+  /* Glass Borders & Accents */
+  --border-subtle: rgba(56, 189, 248, 0.16);
+  --border-highlight: rgba(0, 242, 254, 0.42);
+  --border-glass: rgba(255, 255, 255, 0.08);
+
+  /* Text Colors */
+  --text-white: #ffffff;
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  /* Typography */
+  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Shadows & Glows */
+  --shadow-glass: 0 16px 40px -10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 242, 254, 0.08);
+  --shadow-alert: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 24px rgba(239, 68, 68, 0.22);
+  --shadow-button: 0 4px 20px rgba(0, 242, 254, 0.32);
+
+  /* Motion & Depth Design Tokens */
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --motion-duration-fast: 200ms;
+  --motion-duration-normal: 400ms;
+  --motion-duration-slow: 750ms;
+  --parallax-scale: 1.06;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+#hero,
+#problem,
+#architecture,
+#features,
+#demo,
+#dashboard,
+#impact,
+#cta {
+  scroll-margin-top: 80px;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-darkest);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(14, 116, 144, 0.18), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 60%, rgba(37, 99, 235, 0.12), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 10% 80%, rgba(2, 132, 199, 0.08), transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-darkest);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 254, 0.4);
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  box-shadow: var(--shadow-glass);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.6), transparent);
+}
+
+.glass-panel:hover {
+  border-color: var(--border-highlight);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.8), 0 0 28px rgba(0, 242, 254, 0.14);
+}
+
+.glass-panel-warning {
+  background: var(--bg-surface-alert);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--alert-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-alert);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-warning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.8), transparent);
+}
+
+.glass-panel-warning:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.85), 0 0 32px rgba(239, 68, 68, 0.3);
+}
+
+/* Gradient Text */
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #38bdf8 0%, #00f2fe 50%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.text-gradient-alert {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 60%, #f97316 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Atmospheric Glows & Vignettes */
+.ambient-glow-top {
+  position: absolute;
+  top: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, rgba(37, 99, 235, 0.04) 60%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-grid {
+  position: absolute;
+  inset: 0;
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  mask-image: radial-gradient(circle at 70% 40%, black 20%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scanline Effect for Anomaly Monitor */
+.scanline-overlay {
+  position: relative;
+}
+.scanline-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes scanBeam {
+  0% { top: 0%; opacity: 0.8; }
+  50% { opacity: 0.3; }
+  100% { top: 100%; opacity: 0.8; }
+}
+
+@keyframes alertBlink {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8)); }
+  50% { opacity: 0.4; filter: none; }
+}
+
+.animate-float {
+  animation: floatGentle 5s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-alert-blink {
+  animation: alertBlink 1.8s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   StockSentinel AI - Consistent Motion System (Scroll Reveals & Staggers)
+   ========================================================================== */
+
+.motion-fade-up {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.motion-fade-in {
+  opacity: 0;
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+
+.motion-scale-up {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+/* Visibility triggers applied once upon entering viewport */
+.motion-fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.motion-fade-in.is-visible {
+  opacity: 1;
+}
+
+.motion-scale-up.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger helpers */
+.motion-stagger-1 { transition-delay: 70ms; }
+.motion-stagger-2 { transition-delay: 140ms; }
+.motion-stagger-3 { transition-delay: 210ms; }
+.motion-stagger-4 { transition-delay: 280ms; }
+.motion-stagger-5 { transition-delay: 350ms; }
+.motion-stagger-6 { transition-delay: 420ms; }
+
+/* Subtle SVG line drawing for stock vs sales divergence */
+@keyframes drawPolyline {
+  from {
+    stroke-dashoffset: 400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.chart-polyline-stock {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 0;
+  animation: drawPolyline 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.chart-polyline-sales {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 0;
+  animation: drawPolyline 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Feature View Open/Close Transitions */
+@keyframes featureDetailEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes featureGridEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feature-detail-enter {
+  animation: featureDetailEnter 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.feature-grid-enter {
+  animation: featureGridEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* State-Driven Dynamic Flash & Update Animations */
+@keyframes rowFlash {
+  0% {
+    background-color: rgba(0, 242, 254, 0.25);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.row-updated-flash {
+  animation: rowFlash 1.2s ease-out forwards;
+}
+
+@keyframes numGlow {
+  0% {
+    filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.7));
+    color: #00f2fe;
+  }
+  100% {
+    filter: none;
+  }
+}
+
+.num-update-pulse {
+  animation: numGlow 0.45s ease-out forwards;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #030712;
+  background: linear-gradient(135deg, #00f2fe 0%, #38bdf8 50%, #60a5fa 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0, 242, 254, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 242, 254, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  filter: brightness(1.08);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--cyan-primary);
+  outline-offset: 3px;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-2px);
+  color: #ffffff;
+  box-shadow: 0 6px 22px rgba(0, 242, 254, 0.16);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--cyan-bright);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Continuous Cinematic Section Backdrop & Cyan Pathway Motif
+   ========================================================================== */
+
+.section-backdrop-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.backdrop-base-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #030712 0%, #060e20 50%, #030712 100%);
+  z-index: 1;
+}
+
+.backdrop-ambient-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+  z-index: 2;
+  transition: opacity 0.8s ease;
+}
+
+.backdrop-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-size: 48px 48px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 242, 254, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 242, 254, 0.02) 1px, transparent 1px);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 50%, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 50%, black 20%, transparent 80%);
+  z-index: 3;
+}
+
+.backdrop-media-element {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 4;
+  will-change: transform, opacity;
+  transition: opacity 1.2s var(--motion-ease-out);
+}
+
+.backdrop-media-element.media-hidden {
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(1.02);
+}
+
+.backdrop-media-element.media-visible {
+  opacity: 1;
+}
+
+.backdrop-darkness-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  transition: background-color 0.6s ease;
+}
+
+.backdrop-edge-feather-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(180deg, #030712 0%, rgba(3, 7, 18, 0.8) 40%, transparent 100%);
+  z-index: 6;
+}
+
+.backdrop-edge-feather-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(0deg, #030712 0%, rgba(3, 7, 18, 0.8) 40%, transparent 100%);
+  z-index: 6;
+}
+
+/* Continuous Cyan Pathway Motif */
+.cyan-pathway-motif {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.cyan-pathway-motif .pathway-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 242, 254, 0.15) 15%,
+    rgba(0, 242, 254, 0.28) 50%,
+    rgba(0, 242, 254, 0.15) 85%,
+    transparent 100%
+  );
+}
+
+.cyan-pathway-motif.accent-red .pathway-spine {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(239, 68, 68, 0.2) 20%,
+    rgba(239, 68, 68, 0.35) 50%,
+    rgba(0, 242, 254, 0.2) 80%,
+    transparent 100%
+  );
+}
+
+@keyframes pathwayPulse {
+  0% {
+    top: -10%;
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    top: 110%;
+    opacity: 0;
+  }
+}
+
+.pathway-light-pulse {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 80px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, #00f2fe 50%, transparent);
+  box-shadow: 0 0 16px #00f2fe, 0 0 32px rgba(0, 242, 254, 0.6);
+  animation: pathwayPulse 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.cyan-pathway-motif.accent-red .pathway-light-pulse {
+  background: linear-gradient(180deg, transparent, #ef4444 50%, transparent);
+  box-shadow: 0 0 16px #ef4444, 0 0 32px rgba(239, 68, 68, 0.6);
+}
+
+.pathway-node {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pathway-node-top {
+  top: 0;
+}
+
+.pathway-node-bottom {
+  bottom: 0;
+}
+
+.node-diamond {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: #00f2fe;
+  box-shadow: 0 0 8px #00f2fe;
+  border-radius: 1px;
+}
+
+.cyan-pathway-motif.accent-red .node-diamond {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .backdrop-media-element {
+    transform: none !important;
+  }
+}
