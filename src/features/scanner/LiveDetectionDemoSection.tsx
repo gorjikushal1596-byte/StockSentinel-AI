@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Play,
   RotateCcw,
@@ -13,6 +13,8 @@ import {
   Store,
   Package,
   SlidersHorizontal,
+  Database,
+  RefreshCw,
 } from 'lucide-react';
 import { SectionBackdrop } from '@/components/layout/SectionBackdrop';
 import { evaluateAnomaly } from './scannerEngine';
@@ -57,10 +59,36 @@ export const LiveDetectionDemoSection: React.FC<{
     }
   };
 
-  // Scanning animation states
+  // Scanning animation states (Client Simulation)
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
   const [hasScanned, setHasScanned] = useState(true); // Initial demo view ready
+
+  // Real backend scan states
+  const [isScanningBackend, setIsScanningBackend] = useState(false);
+  const [backendScanDate, setBackendScanDate] = useState('2025-04-30');
+  const [backendScanResult, setBackendScanResult] = useState<{
+    scanId: string;
+    findingCount: number;
+    storesCovered: number;
+    status: string;
+    evaluationDate: string;
+  } | null>(null);
+  const [backendScanError, setBackendScanError] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiClient
+      .listDatasets()
+      .then((dsList) => {
+        if (dsList && dsList.length > 0) {
+          const target = dsList.find((d) => d.status === 'imported') || dsList[0];
+          if (target?.end_date) {
+            setBackendScanDate(target.end_date);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const storeOptions = [
     'Store #12 — Downtown Flagship (824 active SKUs)',
@@ -111,26 +139,47 @@ export const LiveDetectionDemoSection: React.FC<{
     }
   };
 
-  const handleRunScan = () => {
-    if (isScanning) return; // Prevent duplicate scan runs while active
+  const handleRunSimulation = () => {
+    if (isScanning) return; // Prevent duplicate simulation runs while active
     setIsScanning(true);
     setScanStep(1);
     setHasScanned(false);
 
-    // Concurrently trigger backend detection scan to persist run to SQLite
-    apiClient.triggerScan({
-      evaluation_date: '2026-10-15',
-      threshold_days: Math.max(3, zeroSalesDays),
-      confidence_cutoff: 40.0,
-    }).catch(() => {});
-
-    setTimeout(() => setScanStep(2), 450);
-    setTimeout(() => setScanStep(3), 1000);
+    setTimeout(() => setScanStep(2), 350);
+    setTimeout(() => setScanStep(3), 750);
     setTimeout(() => {
       setScanStep(4);
       setIsScanning(false);
       setHasScanned(true);
-    }, 1650);
+    }, 1200);
+  };
+
+  const handleRunBackendScan = async () => {
+    if (isScanningBackend) return;
+    setIsScanningBackend(true);
+    setBackendScanError(null);
+
+    try {
+      const res = await apiClient.triggerScan({
+        evaluation_date: backendScanDate,
+        threshold_days: Math.max(2, Math.min(7, zeroSalesDays)),
+        confidence_cutoff: 40.0,
+        max_findings_per_store: 20,
+      });
+
+      setBackendScanResult({
+        scanId: res.scan_id,
+        findingCount: res.flagged_count ?? res.findings?.length ?? 0,
+        storesCovered: res.stores_covered,
+        status: res.status,
+        evaluationDate: res.evaluation_date,
+      });
+    } catch (err: any) {
+      setBackendScanResult(null);
+      setBackendScanError(err.message || 'Backend scan request failed');
+    } finally {
+      setIsScanningBackend(false);
+    }
   };
 
   // Deterministic Poisson evaluation logic via centralized detection engine
@@ -378,20 +427,76 @@ export const LiveDetectionDemoSection: React.FC<{
               />
             </div>
 
-            {/* Action Trigger */}
-            <button
-              type="button"
-              onClick={handleRunScan}
-              disabled={isScanning}
-              className="btn-primary w-full run-scan-trigger"
-            >
-              <Play size={16} fill="currentColor" />
-              <span>{isScanning ? 'Executing Diagnostic Scan...' : 'Run Anomaly Scan'}</span>
-            </button>
+            {/* Action Triggers */}
+            <div className="flex flex-col gap-2 mt-4">
+              <button
+                type="button"
+                onClick={handleRunSimulation}
+                disabled={isScanning}
+                className="btn-secondary w-full flex items-center justify-center gap-2 py-2.5 font-mono text-xs cursor-pointer"
+              >
+                <Play size={14} fill="currentColor" />
+                <span>{isScanning ? 'Simulating Scenario...' : 'Run Client Simulation'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRunBackendScan}
+                disabled={isScanningBackend}
+                className="btn-primary w-full flex items-center justify-center gap-2 py-2.5 font-mono text-xs cursor-pointer"
+              >
+                {isScanningBackend ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin text-cyan-primary" />
+                    <span>Executing Backend Scan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Database size={14} />
+                    <span>Execute Real Backend Scan</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Right Column: Dynamic Analysis & Results Card */}
           <div className="workbench-results glass-panel motion-fade-up motion-stagger-2">
+            {/* Visible Backend Scan Error Notification */}
+            {backendScanError && (
+              <div className="p-3 mb-4 rounded-lg bg-red-950/60 border border-red-500/50 text-red-200 text-xs flex items-start gap-2.5 animate-fade-in font-mono">
+                <AlertOctagon size={16} className="text-red-400 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <div className="font-bold text-red-300">Backend Scan Failed</div>
+                  <div className="text-slate-300 mt-0.5">{backendScanError}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Real Backend Scan Result Banner */}
+            {backendScanResult && (
+              <div className="p-3 mb-4 rounded-lg bg-cyan-950/60 border border-cyan-500/50 text-cyan-200 text-xs flex items-center justify-between gap-3 animate-fade-in font-mono flex-wrap">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-cyan-400 shrink-0" />
+                  <div>
+                    <div className="font-bold text-white">
+                      Backend Scan Confirmed: <span className="text-cyan-primary">{backendScanResult.scanId}</span>
+                    </div>
+                    <div className="text-slate-300 text-[11px]">
+                      {backendScanResult.findingCount} findings returned across {backendScanResult.storesCovered} stores (Date: {backendScanResult.evaluationDate})
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onExploreDashboard()}
+                  className="btn-secondary py-1 px-2.5 text-xs font-mono text-cyan-300 hover:text-white shrink-0 cursor-pointer"
+                >
+                  View in Top-20 Queue →
+                </button>
+              </div>
+            )}
+
             {isScanning && (
               <div className="scan-in-progress-view animate-fade-in">
                 <div className="radar-spinner" />
@@ -415,6 +520,17 @@ export const LiveDetectionDemoSection: React.FC<{
 
             {!isScanning && hasScanned && (
               <div className="scan-results-top animate-fade-in">
+                {/* Clear Simulation Mode Label Banner */}
+                <div className="mb-3 flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-white/5">
+                  <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-1.5">
+                    <SlidersHorizontal size={12} />
+                    <span>SIMULATION RESULT ({activePreset === 'custom' ? 'CUSTOM SCENARIO' : `PRESET: ${activePreset.toUpperCase()}`})</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    * Client-side Poisson diagnostic sandbox
+                  </span>
+                </div>
+
                 {/* Result Header Badge */}
                 <div className="result-status-header">
                   {isGenuineOos ? (
@@ -643,11 +759,11 @@ export const LiveDetectionDemoSection: React.FC<{
                 <div className="result-actions-row">
                   <button
                     type="button"
-                    onClick={handleRunScan}
+                    onClick={handleRunSimulation}
                     className="btn-secondary"
                   >
                     <RotateCcw size={15} />
-                    <span>Recalculate Scenario</span>
+                    <span>Recalculate Simulation</span>
                   </button>
 
                   <button

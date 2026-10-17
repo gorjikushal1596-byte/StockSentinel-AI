@@ -1,7 +1,7 @@
 """Tests for precision@20 and recall evaluation service."""
 
-from backend.app.db.models import Finding, GroundTruthLabel
-from backend.app.services.evaluation_service import EvaluationService
+from app.db.models import Finding, GroundTruthLabel
+from app.services.evaluation_service import EvaluationService
 
 
 def test_hand_checkable_precision_at_20_and_recall():

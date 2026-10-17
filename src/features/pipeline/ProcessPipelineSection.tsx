@@ -85,7 +85,7 @@ export const ProcessPipelineSection: React.FC<ProcessPipelineSectionProps> = ({
         'Delivers clean, actionable guidance directly to mobile handhelds (Zebra, iOS, Android).',
         'Includes explicit plain-English rationale for store team (e.g. "Expected 4.2 units/week, 0 in 7 days").',
       ],
-      telemetryTag: 'CONSTRAINT: Exactly 20 Checks / Store-Day',
+      telemetryTag: 'CONSTRAINT: Up to 20 Findings / Store-Day',
       latency: 'Automated 06:00 AM Roster',
     },
     {

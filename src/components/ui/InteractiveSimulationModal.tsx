@@ -40,8 +40,13 @@ export const InteractiveSimulationModal: React.FC<InteractiveSimulationModalProp
               <ShieldAlert size={20} className="text-cyan" />
             </div>
             <div>
-              <h3 className="modal-title">Live Sentinel Anomaly Scanner</h3>
-              <p className="modal-subtitle">Direct POS Telemetry vs ERP Ledger Cross-Validation</p>
+              <div className="flex items-center gap-2">
+                <h3 className="modal-title">Interactive Visual Simulation</h3>
+                <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  Simulation Preset
+                </span>
+              </div>
+              <p className="modal-subtitle">Client-Side UI Demonstration • Real scans execute via FastAPI backend</p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="close-btn" aria-label="Close modal">
@@ -51,12 +56,27 @@ export const InteractiveSimulationModal: React.FC<InteractiveSimulationModalProp
 
         {/* Body Content */}
         <div className="modal-body">
+          <div className="p-2.5 mb-3 rounded bg-cyan-950/40 border border-cyan-500/20 text-[11px] text-cyan-200/90 flex items-center justify-between">
+            <span>Illustrative simulation preset. Real POS and ERP ledger audits run in Frame 05 / 06.</span>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                const el = document.getElementById('demo');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-cyan-400 underline font-mono hover:text-white"
+            >
+              Go to Real Scanner →
+            </button>
+          </div>
+
           {/* Target Store Select */}
           <div className="store-selector-bar">
             <div className="selector-label">Target Environment:</div>
             <div className="selected-store-pill">
               <span className="store-dot" />
-              <span>Store #12 — Downtown Flagship (824 active SKUs)</span>
+              <span>Simulated Store #12 — Downtown Flagship (Preset SKU Catalog)</span>
             </div>
           </div>
 
@@ -65,9 +85,9 @@ export const InteractiveSimulationModal: React.FC<InteractiveSimulationModalProp
             {!scanning && !completed && (
               <div className="idle-state">
                 <Search size={40} className="idle-icon" />
-                <h4>Ready to Cross-Reference Inventory</h4>
+                <h4>Simulate Inventory Cross-Reference</h4>
                 <p>
-                  Sentinel AI will compare 18 months of historical sales velocity against current positive on-hand inventory balances to isolate phantom stock-outs.
+                  Demonstrates the multi-stage visual process comparing sales velocity against ledger stock to identify phantom discrepancies.
                 </p>
                 <button
                   type="button"
@@ -75,7 +95,7 @@ export const InteractiveSimulationModal: React.FC<InteractiveSimulationModalProp
                   className="btn-primary start-scan-btn"
                 >
                   <Play size={16} fill="currentColor" />
-                  <span>Execute Diagnostic Scan</span>
+                  <span>Execute Simulated Scan</span>
                 </button>
               </div>
             )}
@@ -84,22 +104,22 @@ export const InteractiveSimulationModal: React.FC<InteractiveSimulationModalProp
               <div className="scanning-state">
                 <RefreshCw size={44} className="spin-icon" />
                 <h4 className="scan-status-text">
-                  {scanStep === 1 && 'Ingesting 7-day POS register throughput...'}
-                  {scanStep === 2 && 'Comparing ERP on-hand units across aisles...'}
-                  {scanStep === 3 && 'Evaluating Bayesian zero-sales anomaly thresholds...'}
-                  {scanStep === 4 && 'Isolating high-confidence phantom stock-outs...'}
+                  {scanStep === 1 && '[Simulated] Ingesting POS register throughput...'}
+                  {scanStep === 2 && '[Simulated] Comparing ERP on-hand units across aisles...'}
+                  {scanStep === 3 && '[Simulated] Evaluating anomaly thresholds...'}
+                  {scanStep === 4 && '[Simulated] Isolating high-confidence phantom stock-outs...'}
                 </h4>
                 <div className="progress-bar-track">
                   <div className="progress-bar-fill" style={{ width: `${scanStep * 25}%` }} />
                 </div>
-                <div className="scanned-count">Evaluating SKU #{4580 + scanStep * 2} of 824</div>
+                <div className="scanned-count">[Simulation] Evaluating SKU #{4580 + scanStep * 2} of 824</div>
               </div>
             )}
 
             {completed && (
               <div className="result-state">
                 <div className="result-alert-box">
-                  <div className="alert-chip">CRITICAL ANOMALY IDENTIFIED</div>
+                  <div className="alert-chip">[SIMULATED RESULT] CRITICAL ANOMALY IDENTIFIED</div>
                   <div className="result-sku-row">
                     <span className="result-sku">SKU #4587</span>
                     <span className="result-name">Smart Aura Soundbar • Aisle 4-B</span>
@@ -118,7 +138,7 @@ export const InteractiveSimulationModal: React.FC<InteractiveSimulationModalProp
                   </div>
 
                   <p className="result-summary">
-                    Calculated stock-out probability: <strong>99.4%</strong>. The item is physically missing from the shelf despite positive system records.
+                    Calculated stock-out probability: <strong>99.4%</strong>. (Preset simulation outcome).
                   </p>
                 </div>
 
@@ -128,14 +148,18 @@ export const InteractiveSimulationModal: React.FC<InteractiveSimulationModalProp
                     onClick={handleStartScan}
                     className="btn-secondary re-scan-btn"
                   >
-                    Run Another Scan
+                    Re-run Simulation
                   </button>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={() => {
+                      onClose();
+                      const el = document.getElementById('dashboard');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
                     className="btn-primary confirm-btn"
                   >
-                    <span>Dispatch Floor Check</span>
+                    <span>View Real Store Queue</span>
                     <ArrowRight size={15} />
                   </button>
                 </div>

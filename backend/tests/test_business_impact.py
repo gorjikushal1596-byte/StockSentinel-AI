@@ -3,11 +3,11 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.main import app
-from backend.app.db.database import SessionLocal, init_db
-from backend.app.services.dataset_service import DatasetService
-from backend.app.schemas.scan import ScanRequest
-from backend.app.api.scans import execute_scan
+from app.main import app
+from app.db.database import SessionLocal, init_db
+from app.services.dataset_service import DatasetService
+from app.schemas.scan import ScanRequest
+from app.api.scans import execute_scan
 
 client = TestClient(app)
 
@@ -23,7 +23,7 @@ def setup_benchmark_dataset():
         ds = next((d for d in existing if d.dataset_id.startswith("DS_SYNTHETIC") and d.status == "imported"), None)
         has_records = False
         if ds:
-            from backend.app.db.models import DailyRecord
+            from app.db.models import DailyRecord
             has_records = db.query(DailyRecord).filter(DailyRecord.dataset_id == ds.dataset_id).count() > 0
         if not ds or not has_records:
             ds, _ = svc.load_synthetic_dataset()

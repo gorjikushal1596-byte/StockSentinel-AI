@@ -7,9 +7,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import openpyxl
 
-from backend.app.main import app
-from backend.app.db.database import SessionLocal, init_db
-from backend.app.db.models import Dataset, DailyRecord, Store, SKU
+from app.main import app
+from app.db.database import SessionLocal, init_db
+from app.db.models import Dataset, DailyRecord, Store, SKU
 
 client = TestClient(app)
 

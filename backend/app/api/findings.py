@@ -3,15 +3,15 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from backend.app.db.database import get_db
-from backend.app.db.repository import StockSentinelRepository
-from backend.app.schemas.finding import (
+from app.db.database import get_db
+from app.db.repository import StockSentinelRepository
+from app.schemas.finding import (
     FindingResponse,
     FindingStatusUpdate,
     EvidenceResponse,
     EvidenceSignal,
 )
-from backend.app.schemas.inventory import TimeSeriesPoint
+from app.schemas.inventory import TimeSeriesPoint
 
 router = APIRouter(prefix="/findings", tags=["Findings"])
 

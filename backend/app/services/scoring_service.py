@@ -8,8 +8,8 @@ Ranking is 100% deterministic with documented tie-breakers.
 
 import json
 import uuid
-from backend.app.db.models import Finding
-from backend.app.services.detection_service import DetectionCandidate
+from app.db.models import Finding
+from app.services.detection_service import DetectionCandidate
 
 
 class ScoringRankingService:
@@ -42,8 +42,9 @@ class ScoringRankingService:
             ),
         )
 
-        # Enforce budget cap
-        top_candidates = sorted_candidates[:max_per_store]
+        # Enforce strict operational budget cap (<= 20 findings per store-day)
+        strict_cap = min(20, max(1, max_per_store if max_per_store is not None else 20))
+        top_candidates = sorted_candidates[:strict_cap]
 
         findings: list[Finding] = []
         for rank_idx, cand in enumerate(top_candidates, start=1):

@@ -8,30 +8,47 @@ import type { FindingResponse, FindingStatusType } from './apiClient';
 import type { VerificationItem, VerificationStatus } from '@/types/verification';
 import type { RiskTier } from '@/types/scanner';
 
-export function mapStatusToBackend(status: VerificationStatus): FindingStatusType {
+export function isBackendFinding(id: string | null | undefined): boolean {
+  if (!id) return false;
+  // Demo presets or simulated offline IDs start with V-, DEMO-, SIM-, or MOCK-
+  if (id.startsWith('V-') || id.startsWith('DEMO-') || id.startsWith('SIM-') || id.startsWith('MOCK-')) {
+    return false;
+  }
+  return true;
+}
+
+export function mapStatusToBackend(status: VerificationStatus | FindingStatusType | string): FindingStatusType {
   switch (status) {
     case 'Pending Inspection':
+    case 'pending':
       return 'pending';
     case 'Floor Check Dispatched':
+    case 'unresolved':
       return 'unresolved';
     case 'Resolved (Restocked)':
+    case 'verified':
       return 'verified';
     case 'Misplaced (Found)':
+    case 'false_positive':
       return 'false_positive';
     default:
       return 'pending';
   }
 }
 
-export function mapStatusToFrontend(status: FindingStatusType): VerificationStatus {
+export function mapStatusToFrontend(status: FindingStatusType | VerificationStatus | string): VerificationStatus {
   switch (status) {
     case 'pending':
+    case 'Pending Inspection':
       return 'Pending Inspection';
     case 'unresolved':
+    case 'Floor Check Dispatched':
       return 'Floor Check Dispatched';
     case 'verified':
+    case 'Resolved (Restocked)':
       return 'Resolved (Restocked)';
     case 'false_positive':
+    case 'Misplaced (Found)':
       return 'Misplaced (Found)';
     default:
       return 'Pending Inspection';

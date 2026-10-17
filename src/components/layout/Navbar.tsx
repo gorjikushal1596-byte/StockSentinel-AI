@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Activity, ChevronRight, Sparkles, Menu, X, Database } from 'lucide-react';
+import { ShieldAlert, ChevronRight, Sparkles, Menu, X, Database } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
 interface NavbarProps {
@@ -96,7 +96,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     const targetId = href.replace('#', '');
     setActiveSection(targetId);
 
-    if (onNavigateToSection) {
+    if (targetId === 'dashboard' && onOpenDashboard) {
+      onOpenDashboard();
+    } else if (onNavigateToSection) {
       onNavigateToSection(targetId);
     } else {
       const el = document.getElementById(targetId);
@@ -162,22 +164,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Action Controls */}
         <div className="navbar-actions">
-          <button 
-            type="button" 
-            onClick={(e) => {
-              if (onOpenDashboard) {
-                onOpenDashboard();
-              } else {
-                handleScrollTo(e, '#dashboard');
-              }
-            }}
-            className="nav-link-btn"
-            title="Navigate to Top-20 verification queue"
-          >
-            <Activity size={15} />
-            <span className="btn-text-desktop">Top-20 Queue</span>
-          </button>
-
           {onOpenDataset && (
             <button
               type="button"
@@ -234,21 +220,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </a>
             ))}
             <div className="mobile-actions-divider" />
-            <button
-              type="button"
-              onClick={(e) => {
-                setMobileMenuOpen(false);
-                if (onOpenDashboard) {
-                  onOpenDashboard();
-                } else {
-                  handleScrollTo(e, '#dashboard');
-                }
-              }}
-              className="btn-secondary w-full"
-            >
-              <Activity size={15} />
-              <span>Open Top-20 Queue</span>
-            </button>
+            {onOpenDataset && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenDataset();
+                }}
+                className="btn-secondary w-full"
+              >
+                <Database size={15} />
+                <span>Manage Datasets</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={(e) => {

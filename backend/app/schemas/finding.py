@@ -2,7 +2,7 @@
 
 from typing import Literal
 from pydantic import BaseModel, Field, ConfigDict
-from backend.app.schemas.inventory import TimeSeriesPoint
+from app.schemas.inventory import TimeSeriesPoint
 
 SeverityType = Literal["CRITICAL", "HIGH", "ROUTINE"]
 FindingStatusType = Literal["pending", "verified", "false_positive", "unresolved"]

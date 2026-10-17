@@ -6,9 +6,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
 
-from backend.app.db.database import get_db
-from backend.app.db.models import GroundTruthLabel
-from backend.app.schemas.dataset import (
+from app.db.database import get_db
+from app.db.models import GroundTruthLabel
+from app.schemas.dataset import (
     DatasetResponse,
     DatasetProfile,
     ColumnMappingRequest,
@@ -17,8 +17,8 @@ from backend.app.schemas.dataset import (
     ImportResult,
     DatasetFileItem,
 )
-from backend.app.services.dataset_service import DatasetService
-from backend.app.services.ingestion_service import profile_raw_dataset
+from app.services.dataset_service import DatasetService
+from app.services.ingestion_service import profile_raw_dataset
 
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
 

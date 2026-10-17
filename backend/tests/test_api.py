@@ -2,9 +2,9 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.db.database import init_db, SessionLocal
-from backend.app.services.data_generator import generate_and_seed_data
+from app.main import app
+from app.db.database import init_db, SessionLocal
+from app.services.data_generator import generate_and_seed_data
 
 client = TestClient(app)
 

@@ -8,8 +8,8 @@ In strict accordance with the official PDF:
 Hidden labels are completely isolated from detector features.
 """
 
-from backend.app.db.models import Finding, GroundTruthLabel
-from backend.app.schemas.evaluation import EvaluationResponse, StoreEvaluationMetric
+from app.db.models import Finding, GroundTruthLabel
+from app.schemas.evaluation import EvaluationResponse, StoreEvaluationMetric
 
 
 class EvaluationService:

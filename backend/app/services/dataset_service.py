@@ -14,7 +14,7 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_
 
-from backend.app.db.models import (
+from app.db.models import (
     Dataset,
     DatasetFile,
     Store,
@@ -22,21 +22,21 @@ from backend.app.db.models import (
     DailyRecord,
     GroundTruthLabel,
 )
-from backend.app.schemas.dataset import (
+from app.schemas.dataset import (
     DatasetResponse,
     DatasetProfile,
     ValidationReport,
     ImportResult,
     ColumnMappingRequest,
 )
-from backend.app.services.ingestion_service import (
+from app.services.ingestion_service import (
     sanitize_filename,
     get_dataset_storage_dir,
     profile_raw_dataset,
     infer_semantic_mapping,
     read_file_records,
 )
-from backend.app.services.validation_service import validate_dataset_records
+from app.services.validation_service import validate_dataset_records
 
 
 class DatasetService:

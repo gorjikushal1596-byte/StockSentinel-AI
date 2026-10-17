@@ -2,9 +2,9 @@
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from backend.app.db.database import get_db
-from backend.app.db.repository import StockSentinelRepository
-from backend.app.schemas.inventory import StoreResponse, SKUResponse
+from app.db.database import get_db
+from app.db.repository import StockSentinelRepository
+from app.schemas.inventory import StoreResponse, SKUResponse
 
 router = APIRouter(tags=["Catalog"])
 

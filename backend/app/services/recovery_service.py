@@ -13,8 +13,8 @@ from typing import Any
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
-from backend.app.db.models import Finding, SKU, Store, Dataset, Scan, BusinessImpactReport
-from backend.app.schemas.recovery import (
+from app.db.models import Finding, SKU, Store, Dataset, Scan, BusinessImpactReport
+from app.schemas.recovery import (
     RecoveryEstimateRequest,
     RecoveryEstimateResponse,
     RecoveryArithmeticBreakdown,

@@ -4,7 +4,7 @@ import json
 from datetime import datetime, date
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_, desc, func
-from backend.app.db.models import Store, SKU, DailyRecord, GroundTruthLabel, Scan, Finding
+from app.db.models import Store, SKU, DailyRecord, GroundTruthLabel, Scan, Finding
 
 
 class StockSentinelRepository:
@@ -152,6 +152,22 @@ class StockSentinelRepository:
     def get_scan(self, scan_id: str) -> Scan | None:
         return self.db.get(Scan, scan_id)
 
+    def get_latest_scan(
+        self,
+        dataset_id: str | None = None,
+        evaluation_date: str | None = None,
+    ) -> Scan | None:
+        stmt = select(Scan)
+        conditions = []
+        if dataset_id:
+            conditions.append(Scan.dataset_id == dataset_id)
+        if evaluation_date:
+            conditions.append(Scan.evaluation_date == evaluation_date)
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
+        stmt = stmt.order_by(desc(Scan.created_at)).limit(1)
+        return self.db.scalars(stmt).first()
+
     def get_scans(self, dataset_id: str | None = None, limit: int = 20, offset: int = 0) -> list[Scan]:
         stmt = select(Scan)
         if dataset_id:
@@ -165,6 +181,26 @@ class StockSentinelRepository:
     def save_findings(self, findings: list[Finding]) -> None:
         self.db.add_all(findings)
         self.db.commit()
+
+    def get_latest_finding_statuses(
+        self,
+        evaluation_date: str,
+        dataset_id: str | None = None,
+    ) -> dict[tuple[str, str], str]:
+        """
+        Retrieves the status for each (store_id, sku_id) from the most recent scan
+        on the given evaluation_date and dataset so that associate verification actions
+        are carried forward across re-scans.
+        """
+        latest_scan = self.get_latest_scan(dataset_id=dataset_id, evaluation_date=evaluation_date)
+        if not latest_scan:
+            return {}
+        stmt = (
+            select(Finding.store_id, Finding.sku_id, Finding.status)
+            .where(Finding.scan_id == latest_scan.scan_id)
+        )
+        rows = self.db.execute(stmt).all()
+        return {(st_id, sku_id): status for st_id, sku_id, status in rows if status}
 
     def get_findings(
         self,
@@ -181,6 +217,17 @@ class StockSentinelRepository:
         conditions = []
         if scan_id:
             conditions.append(Finding.scan_id == scan_id)
+        elif evaluation_date or dataset_id:
+            # When querying by evaluation_date and/or dataset without a specific scan_id,
+            # scope to findings from the latest scan for that scope so older duplicate scans
+            # do not mask or overwrite recent verification status changes.
+            latest_scan = self.get_latest_scan(dataset_id=dataset_id, evaluation_date=evaluation_date)
+            if latest_scan:
+                conditions.append(Finding.scan_id == latest_scan.scan_id)
+            elif evaluation_date:
+                # If an explicit date was requested but no scan has run yet
+                return []
+
         if dataset_id:
             conditions.append(Finding.dataset_id == dataset_id)
         if store_id:
@@ -210,6 +257,23 @@ class StockSentinelRepository:
         finding = self.db.get(Finding, finding_id)
         if finding:
             finding.status = new_status
+            # Synchronize any historical records for the same store/sku/date to avoid stale read-backs
+            sync_stmt = (
+                select(Finding)
+                .where(
+                    and_(
+                        Finding.store_id == finding.store_id,
+                        Finding.sku_id == finding.sku_id,
+                        Finding.evaluation_date == finding.evaluation_date,
+                        Finding.dataset_id == finding.dataset_id,
+                        Finding.finding_id != finding.finding_id,
+                    )
+                )
+            )
+            siblings = self.db.scalars(sync_stmt).all()
+            for s in siblings:
+                s.status = new_status
+
             self.db.commit()
             self.db.refresh(finding)
         return finding

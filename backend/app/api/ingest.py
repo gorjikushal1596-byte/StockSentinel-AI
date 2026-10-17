@@ -2,11 +2,11 @@
 
 from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
-from backend.app.db.database import get_db
-from backend.app.services.data_generator import generate_and_seed_data
+from app.db.database import get_db
+from app.services.data_generator import generate_and_seed_data
 import csv
 import io
-from backend.app.db.models import DailyRecord, GroundTruthLabel, Store, SKU
+from app.db.models import DailyRecord, GroundTruthLabel, Store, SKU
 
 router = APIRouter(prefix="/ingest", tags=["Data Ingestion"])
 

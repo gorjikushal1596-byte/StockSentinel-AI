@@ -1,42 +1,69 @@
-import React from 'react';
-import { Layers, Store, History, CheckCircle2, Calculator } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Layers, Store, History, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { apiClient } from '@/services/apiClient';
 
 export const HeroMetrics: React.FC = () => {
+  const [stats, setStats] = useState<{
+    stores_count: number;
+    skus_count: number;
+    daily_records_count: number;
+    persisted_findings_count: number;
+  } | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    apiClient.checkHealth().then((health) => {
+      if (!mounted) return;
+      if (health.online && health.data?.telemetry_stats) {
+        setIsOnline(true);
+        setStats(health.data.telemetry_stats);
+      } else {
+        setIsOnline(false);
+      }
+    }).catch(() => {
+      if (mounted) setIsOnline(false);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const metrics = [
     {
       icon: <Layers size={18} className="text-cyan-bright" />,
-      value: '~800',
+      value: stats ? stats.skus_count.toLocaleString() : (isOnline === false ? 'Offline' : 'Loading...'),
       label: 'Retail SKUs',
       sublabel: 'Monitored across shelves',
       highlight: false,
     },
     {
       icon: <Store size={18} className="text-cyan-bright" />,
-      value: '25',
+      value: stats ? stats.stores_count.toLocaleString() : (isOnline === false ? 'Offline' : 'Loading...'),
       label: 'Stores',
       sublabel: 'Active multi-store telemetry',
       highlight: false,
     },
     {
       icon: <History size={18} className="text-cyan-bright" />,
-      value: '18 Months',
+      value: stats ? `${stats.daily_records_count.toLocaleString()}` : (isOnline === false ? 'Offline' : 'Loading...'),
       label: 'Historical Sales',
-      sublabel: 'Deep velocity baseline model',
+      sublabel: 'Daily POS ledger records',
       highlight: false,
     },
     {
       icon: <CheckCircle2 size={18} className="text-cyan-bright" />,
       value: 'Top 20',
       label: 'Daily Checks / Store',
-      sublabel: 'High-risk prioritized audits',
+      sublabel: 'Strict <=20 store cap',
       highlight: false,
     },
     {
-      icon: <Calculator size={18} className="text-amber-accent" />,
-      value: '[ Calculation in Progress ]',
-      label: 'Revenue Recovery',
-      sublabel: 'Awaiting verified store rollout',
-      isPlaceholder: true,
+      icon: <ShieldAlert size={18} className={isOnline ? 'text-cyan-bright' : 'text-amber-accent'} />,
+      value: stats ? `${stats.persisted_findings_count.toLocaleString()}` : (isOnline === false ? 'Backend Offline' : 'Connecting...'),
+      label: 'Database Anomalies',
+      sublabel: isOnline ? 'Persisted findings in DB' : 'Check FastAPI at :8000',
+      isPlaceholder: !isOnline,
     },
   ];
 

@@ -37,12 +37,12 @@ pip install -r backend/requirements.txt
 
 ### 3.2 Initialize Database & Seed Benchmark Data
 ```bash
-python -c "from backend.app.db.database import init_db, SessionLocal; from backend.app.services.data_generator import generate_and_seed_data; init_db(); db = SessionLocal(); generate_and_seed_data(db, num_stores=5, num_skus=40, days_history=45); db.close(); print('Database initialized and seeded.')"
+python -c "from app.db.database import init_db, SessionLocal; from app.services.data_generator import generate_and_seed_data; init_db(); db = SessionLocal(); generate_and_seed_data(db, num_stores=5, num_skus=40, days_history=45); db.close(); print('Database initialized and seeded.')"
 ```
 
 ### 3.3 Start FastAPI Development Server
 ```bash
-uvicorn backend.app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8001
 ```
 API Documentation (Swagger UI): `http://localhost:8000/docs`  
 Health Endpoint: `http://localhost:8000/api/health`
@@ -107,5 +107,5 @@ When the full benchmark dataset (800 SKUs, 25 stores, 18 months) is provided:
    - `hidden_ground_truth.csv` *(Evaluation only)*: `store_id,sku_id,date,is_phantom_stockout`
 3. Execute ingestion:
    ```bash
-   python -c "from backend.app.db.database import init_db; init_db()"
+   python -c "from app.db.database import init_db; init_db()"
    ```

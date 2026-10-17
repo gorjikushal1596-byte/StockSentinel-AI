@@ -1,7 +1,7 @@
 """Tests for Top-20 ranking determinism and strict budget capping."""
 
-from backend.app.services.detection_service import DetectionCandidate
-from backend.app.services.scoring_service import ScoringRankingService
+from app.services.detection_service import DetectionCandidate
+from app.services.scoring_service import ScoringRankingService
 
 
 def make_candidate(sku_id: str, velocity_risk: float, confidence: float, streak: int) -> DetectionCandidate:
@@ -58,3 +58,32 @@ def test_ranking_determinism_and_tie_breaking():
     assert findings[1].rank == 2
     assert findings[2].sku_id == "SKU_B"
     assert findings[2].rank == 3
+
+
+def test_top20_constraint_clamps_client_request_above_20():
+    """Service strictly enforces <= 20 even if client passes max_per_store > 20."""
+    candidates = [
+        make_candidate(f"SKU_{i:03d}", velocity_risk=100.0 + i, confidence=80.0, streak=4)
+        for i in range(1, 51)
+    ]
+
+    findings = ScoringRankingService.rank_store_candidates(
+        candidates=candidates,
+        scan_id="scan_test",
+        max_per_store=50,  # Client attempts to request 50 findings
+    )
+
+    # Must be strictly clamped to <= 20
+    assert len(findings) == 20
+    assert max(f.rank for f in findings) == 20
+
+
+def test_scan_request_schema_clamps_max_findings():
+    """ScanRequest schema validator clamps any max_findings_per_store above 20."""
+    from app.schemas.scan import ScanRequest
+
+    req = ScanRequest(
+        evaluation_date="2026-10-15",
+        max_findings_per_store=50,
+    )
+    assert req.max_findings_per_store == 20

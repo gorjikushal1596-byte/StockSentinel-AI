@@ -71,14 +71,25 @@ export interface EvidenceResponse {
 
 export interface ScanResponse {
   scan_id: string;
+  dataset_id?: string | null;
   evaluation_date: string;
   status: string;
+  threshold_days?: number;
   stores_covered: number;
-  skus_analyzed: number;
-  anomalies_detected: number;
+  total_evaluated?: number;
+  flagged_count?: number;
+  skus_analyzed?: number;
+  anomalies_detected?: number;
   created_at: string;
   findings: FindingResponse[];
-  message: string;
+  message?: string;
+}
+
+export interface TelemetryStats {
+  stores_count: number;
+  skus_count: number;
+  daily_records_count: number;
+  persisted_findings_count: number;
 }
 
 export interface HealthResponse {
@@ -86,9 +97,10 @@ export interface HealthResponse {
   version: string;
   service: string;
   database: string;
-  stores_in_db: number;
-  records_in_db: number;
-  evaluation_labels_in_db: number;
+  telemetry_stats?: TelemetryStats;
+  stores_in_db?: number;
+  records_in_db?: number;
+  evaluation_labels_in_db?: number;
 }
 
 export interface PerStoreMetric {
@@ -231,7 +243,7 @@ export interface StoreOption {
   active_skus?: number;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://127.0.0.1:8000/api');
+const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://127.0.0.1:8001/api');
 
 /**
  * Helper to fetch with a timeout
@@ -375,7 +387,7 @@ export const stockSentinelApi = {
     max_findings_per_store?: number;
     store_ids?: string[];
     dataset_id?: string;
-  }): Promise<ScanResponse | null> {
+  }): Promise<ScanResponse> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/scans`, {
         method: 'POST',
@@ -385,10 +397,15 @@ export const stockSentinelApi = {
       if (res.ok) {
         return await res.json();
       }
-      return null;
-    } catch (err) {
-      console.warn('Backend triggerScan unavailable:', err);
-      return null;
+      let detail = `Scan failed (HTTP ${res.status})`;
+      try {
+        const errData = await res.json();
+        if (errData?.detail) detail = errData.detail;
+      } catch {}
+      throw new Error(detail);
+    } catch (err: any) {
+      console.warn('Backend triggerScan error:', err);
+      throw err;
     }
   },
 
@@ -430,7 +447,7 @@ export const stockSentinelApi = {
   /**
    * Update finding verification status
    */
-  async updateFindingStatus(findingId: string, status: FindingStatusType, notes?: string): Promise<FindingResponse | null> {
+  async updateFindingStatus(findingId: string, status: FindingStatusType, notes?: string): Promise<FindingResponse> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/findings/${encodeURIComponent(findingId)}/status`, {
         method: 'PATCH',
@@ -440,10 +457,15 @@ export const stockSentinelApi = {
       if (res.ok) {
         return await res.json();
       }
-      return null;
-    } catch (err) {
-      console.warn('Backend updateFindingStatus unavailable:', err);
-      return null;
+      let detail = `Status update failed (HTTP ${res.status})`;
+      try {
+        const errData = await res.json();
+        if (errData?.detail) detail = errData.detail;
+      } catch {}
+      throw new Error(detail);
+    } catch (err: any) {
+      console.warn('Backend updateFindingStatus error:', err);
+      throw err;
     }
   },
 
@@ -525,10 +547,15 @@ export const stockSentinelApi = {
       if (res.ok) {
         return await res.json();
       }
-      return null;
-    } catch (err) {
+      let detail = `Failed to fetch recovery estimate (HTTP ${res.status})`;
+      try {
+        const errJson = await res.json();
+        if (errJson?.detail) detail = errJson.detail;
+      } catch {}
+      throw new Error(detail);
+    } catch (err: any) {
       console.warn('Backend getRecoveryEstimate unavailable:', err);
-      return null;
+      throw err;
     }
   },
 

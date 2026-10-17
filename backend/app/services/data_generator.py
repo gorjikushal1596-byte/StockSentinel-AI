@@ -13,7 +13,7 @@ import math
 import random
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from backend.app.db.models import Store, SKU, DailyRecord, GroundTruthLabel
+from app.db.models import Store, SKU, DailyRecord, GroundTruthLabel
 
 
 def generate_and_seed_data(

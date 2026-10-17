@@ -2,10 +2,10 @@
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from backend.app.db.database import get_db
-from backend.app.db.repository import StockSentinelRepository
-from backend.app.schemas.evaluation import EvaluationResponse
-from backend.app.services.evaluation_service import EvaluationService
+from app.db.database import get_db
+from app.db.repository import StockSentinelRepository
+from app.schemas.evaluation import EvaluationResponse
+from app.services.evaluation_service import EvaluationService
 
 router = APIRouter(prefix="/evaluation", tags=["Evaluation"])
 

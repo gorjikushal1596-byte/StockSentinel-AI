@@ -15,16 +15,15 @@ import json
 import argparse
 from datetime import datetime
 
-# Add root directory to sys.path so backend imports resolve cleanly
+# Add backend directory to sys.path so app imports resolve cleanly
 current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-from backend.app.db.database import SessionLocal, init_db
-from backend.app.db.models import Finding, GroundTruthLabel, Store
-from backend.app.db.repository import StockSentinelRepository
-from backend.app.services.evaluation_service import EvaluationService
+from app.db.database import SessionLocal, init_db
+from app.db.models import Finding, GroundTruthLabel, Store
+from app.db.repository import StockSentinelRepository
+from app.services.evaluation_service import EvaluationService
 
 
 def run_evaluation(evaluation_date: str, output_format: str = "summary", dataset_id: str | None = None) -> dict:
@@ -52,8 +51,8 @@ def run_evaluation(evaluation_date: str, output_format: str = "summary", dataset
         if not findings:
             print(f"[*] No prior scan findings cached for '{evaluation_date}'. Running detection scan...")
             try:
-                from backend.app.schemas.scan import ScanRequest
-                from backend.app.api.scans import execute_scan
+                from app.schemas.scan import ScanRequest
+                from app.api.scans import execute_scan
                 execute_scan(ScanRequest(evaluation_date=evaluation_date, dataset_id=dataset_id, threshold_days=3), db=db)
                 findings = repo.get_findings(evaluation_date=evaluation_date, dataset_id=dataset_id, limit=1000)
             except Exception as scan_err:
@@ -122,8 +121,8 @@ def main():
 
     eval_date = args.date
     if not eval_date:
-        from backend.app.db.database import SessionLocal, init_db
-        from backend.app.db.repository import StockSentinelRepository
+        from app.db.database import SessionLocal, init_db
+        from app.db.repository import StockSentinelRepository
         init_db()
         db = SessionLocal()
         try:

@@ -43,7 +43,7 @@ def get_db() -> Generator[Session, None, None]:
 
 def init_db() -> None:
     """Initialize all tables declared in models and migrate missing columns non-destructively."""
-    from backend.app.db import models  # noqa: F401
+    from app.db import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
     # SQLite non-destructive column addition for dataset_id

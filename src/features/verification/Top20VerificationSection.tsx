@@ -28,7 +28,12 @@ import {
   type DatasetItem,
   type EvaluationResponse,
 } from '@/services/apiClient';
-import { mapFindingToVerificationItem, mapStatusToBackend } from '@/services/apiAdapters';
+import {
+  mapFindingToVerificationItem,
+  mapStatusToBackend,
+  mapStatusToFrontend,
+  isBackendFinding,
+} from '@/services/apiAdapters';
 
 export type { VerificationItem, VerificationStatus };
 
@@ -37,11 +42,13 @@ export const Top20VerificationSection: React.FC<{
   onOpenDataset?: () => void;
   onScanExecuted?: (scanId: string, datasetId: string, evaluationDate: string) => void;
   onFindingStatusChanged?: () => void;
+  datasetId?: string;
 }> = ({
   onLaunchScanner,
   onOpenDataset,
   onScanExecuted,
   onFindingStatusChanged,
+  datasetId,
 }) => {
   const [selectedStoreFilter, setSelectedStoreFilter] = useState('');
   const [availableStores, setAvailableStores] = useState<string[]>([]);
@@ -54,13 +61,19 @@ export const Top20VerificationSection: React.FC<{
   const [riskFilter, setRiskFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH'>('ALL');
   const [selectedItemForDetail, setSelectedItemForDetail] = useState<VerificationItem | null>(null);
   const [recentlyUpdatedId, setRecentlyUpdatedId] = useState<string | null>(null);
+  const [statusUpdateError, setStatusUpdateError] = useState<{ id: string; message: string } | null>(null);
+  const [isUpdatingStatusId, setIsUpdatingStatusId] = useState<string | null>(null);
 
   // Dataset & Live Scan parameters
   const [datasets, setDatasets] = useState<DatasetItem[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>('');
-  const [evaluationDate, setEvaluationDate] = useState<string>('2025-04-18');
+  const [evaluationDate, setEvaluationDate] = useState<string>('2025-04-30');
   const [thresholdDays, setThresholdDays] = useState<number>(3);
   const [queueSourceLabel, setQueueSourceLabel] = useState<string>('Official Synthetic Suite');
+
+  const currentDataset = useMemo(() => {
+    return datasets.find((item) => item.dataset_id === selectedDatasetId);
+  }, [datasets, selectedDatasetId]);
 
   // Evaluation benchmark modal
   const [isEvalModalOpen, setIsEvalModalOpen] = useState<boolean>(false);
@@ -197,6 +210,46 @@ export const Top20VerificationSection: React.FC<{
     }
   };
 
+  const loadQueueFindings = async (targetDate?: string, targetDsId?: string) => {
+    setIsScanningBackend(true);
+    const dateToUse = targetDate || evaluationDate;
+    const dsToUse = targetDsId !== undefined ? targetDsId : (selectedDatasetId || undefined);
+
+    try {
+      // 1. Fetch persisted findings from database first
+      const existing = await apiClient.getFindings({
+        date: dateToUse,
+        dataset_id: dsToUse,
+        limit: 200,
+      });
+
+      if (existing && existing.length > 0) {
+        const mapped = existing.map(mapFindingToVerificationItem);
+        setItems(mapped);
+        const stores = Array.from(new Set(mapped.map((f) => f.storeId)));
+        if (stores.length > 0) {
+          setAvailableStores(stores);
+          setSelectedStoreFilter((curr) => (stores.includes(curr) ? curr : stores[0]));
+        }
+        const activeScanId = existing[0]?.scan_id || '';
+        if (activeScanId) {
+          onScanExecuted?.(activeScanId, dsToUse || '', dateToUse);
+        }
+        setQueueSourceLabel(`Persisted Queue: ${existing.length} findings across ${stores.length} stores (date: ${dateToUse})`);
+        setBackendStatusMsg(`Loaded ${existing.length} verified findings`);
+        return;
+      }
+
+      // 2. If no findings in database yet, trigger scan
+      await executeBackendScan(dateToUse, dsToUse, thresholdDays);
+    } catch (err: any) {
+      console.warn('Queue load error, falling back to backend scan:', err);
+      await executeBackendScan(dateToUse, dsToUse, thresholdDays);
+    } finally {
+      setIsScanningBackend(false);
+    }
+  };
+
   // Load real findings from FastAPI backend on mount if reachable
   useEffect(() => {
     let isMounted = true;
@@ -215,20 +268,17 @@ export const Top20VerificationSection: React.FC<{
           const syntheticDs = dsList.find((d) => d.dataset_id.startsWith('DS_SYNTHETIC') && d.status === 'imported');
           const targetDs = syntheticDs || dsList.find((d) => d.status === 'imported') || dsList[0];
 
-          let initDate = '2025-04-18';
+          let initDate = '2025-04-30';
           let initDsId = '';
           if (targetDs) {
             initDsId = targetDs.dataset_id;
             setSelectedDatasetId(targetDs.dataset_id);
-            if (targetDs.has_ground_truth) {
-              initDate = '2025-04-18';
-            } else if (targetDs.end_date) {
-              initDate = targetDs.end_date;
-            }
+            // Choose valid date from selected dataset's available date range
+            initDate = targetDs.end_date || targetDs.start_date || '2025-04-30';
             setEvaluationDate(initDate);
           }
 
-          await executeBackendScan(initDate, initDsId || undefined, 3);
+          await loadQueueFindings(initDate, initDsId || undefined);
         } else {
           setBackendOnline(false);
           setBackendStatusMsg('Demo Mode (Backend offline)');
@@ -246,18 +296,33 @@ export const Top20VerificationSection: React.FC<{
     };
   }, []);
 
+  // Respond dynamically to newly uploaded / selected dataset from modal or parent
+  useEffect(() => {
+    if (datasetId && datasetId !== selectedDatasetId && backendOnline) {
+      setSelectedDatasetId(datasetId);
+      apiClient.listDatasets().then((dsList) => {
+        setDatasets(dsList);
+        const match = dsList.find((d) => d.dataset_id === datasetId);
+        const validDate = match?.end_date || match?.start_date || evaluationDate;
+        setEvaluationDate(validDate);
+        loadQueueFindings(validDate, datasetId);
+      });
+    }
+  }, [datasetId, backendOnline]);
+
   // Fetch telemetry evidence when an item is selected for detail
   useEffect(() => {
     if (!selectedItemForDetail) {
       setEvidenceData(null);
       return;
     }
+    const currentItemId = selectedItemForDetail.id;
     let isMounted = true;
     async function fetchDetailEvidence() {
-      if (!backendOnline || !selectedItemForDetail?.id.startsWith('FINDING_')) return;
+      if (!backendOnline || !isBackendFinding(currentItemId)) return;
       setIsLoadingEvidence(true);
       try {
-        const ev = await apiClient.getEvidence(selectedItemForDetail.id);
+        const ev = await apiClient.getEvidence(currentItemId);
         if (isMounted) {
           setEvidenceData(ev);
         }
@@ -274,6 +339,19 @@ export const Top20VerificationSection: React.FC<{
       isMounted = false;
     };
   }, [selectedItemForDetail, backendOnline]);
+
+  // Keyboard Escape listener to dismiss active detail drawer and modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedItemForDetail) setSelectedItemForDetail(null);
+        if (isEvalModalOpen) setIsEvalModalOpen(false);
+        if (isHistoryModalOpen) setIsHistoryModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItemForDetail, isEvalModalOpen, isHistoryModalOpen]);
 
   const handleOpenEvaluation = async () => {
     setIsEvalModalOpen(true);
@@ -315,27 +393,55 @@ export const Top20VerificationSection: React.FC<{
     });
   }, [items, selectedStoreFilter, searchQuery, riskFilter]);
 
-  // Handle status update with visual confirmation flash
-  const handleUpdateStatus = (
+  // Handle status update with server confirmation and visible error handling
+  const handleUpdateStatus = async (
     id: string,
     newStatus: VerificationItem['status']
   ) => {
-    setItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, status: newStatus } : it))
-    );
-    if (selectedItemForDetail && selectedItemForDetail.id === id) {
-      setSelectedItemForDetail((prev) => (prev ? { ...prev, status: newStatus } : null));
-    }
-    setRecentlyUpdatedId(id);
-    setTimeout(() => {
-      setRecentlyUpdatedId((curr) => (curr === id ? null : curr));
-    }, 1200);
+    setStatusUpdateError(null);
 
-    // Persist to backend if online and item is from backend
-    if (backendOnline && id.startsWith('FINDING_')) {
-      apiClient.updateFindingStatus(id, mapStatusToBackend(newStatus)).then(() => {
-        onFindingStatusChanged?.();
+    if (!backendOnline) {
+      setStatusUpdateError({
+        id,
+        message: 'Backend is offline. Cannot save verification status to database.',
       });
+      return;
+    }
+
+    if (!isBackendFinding(id)) {
+      setStatusUpdateError({
+        id,
+        message: 'Cannot update status on simulated demo items. Please run or load a real backend scan first.',
+      });
+      return;
+    }
+
+    setIsUpdatingStatusId(id);
+    try {
+      const backendStatus = mapStatusToBackend(newStatus);
+      const updated = await apiClient.updateFindingStatus(id, backendStatus);
+      const confirmedStatus = mapStatusToFrontend(updated.status);
+
+      // ONLY update UI and counters AFTER backend confirms successful save
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, status: confirmedStatus } : it))
+      );
+      if (selectedItemForDetail && selectedItemForDetail.id === id) {
+        setSelectedItemForDetail((prev) => (prev ? { ...prev, status: confirmedStatus } : null));
+      }
+      setRecentlyUpdatedId(id);
+      setTimeout(() => {
+        setRecentlyUpdatedId((curr) => (curr === id ? null : curr));
+      }, 1200);
+      onFindingStatusChanged?.();
+    } catch (err: any) {
+      console.error('Finding status update error:', err);
+      setStatusUpdateError({
+        id,
+        message: err.message || 'Server status update failed. Status was not saved.',
+      });
+    } finally {
+      setIsUpdatingStatusId(null);
     }
   };
 
@@ -367,12 +473,32 @@ export const Top20VerificationSection: React.FC<{
             Top-20 Daily Verification Queue
           </h2>
           <p className="section-subheadline">
-            Operational constraint enforced: Exactly 20 prioritized anomalies per store-day. Store associates audit high-confidence discrepancies in under 20 minutes.
+            Operational constraint enforced: Up to 20 findings per store per day. Store associates audit high-confidence discrepancies in under 20 minutes.
           </p>
         </div>
 
         {/* Dashboard Workspace */}
         <div className="dashboard-matrix-container glass-panel motion-fade-up motion-stagger-1">
+          {/* Visible Status Update Error Banner */}
+          {statusUpdateError && (
+            <div className="p-3 m-3 mb-0 rounded-lg bg-red-950/70 border border-red-500/50 text-red-200 text-xs flex items-center justify-between gap-3 animate-fade-in font-mono">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={15} className="text-red-400 shrink-0" />
+                <span>
+                  Status update failed on server: {statusUpdateError.message} (Finding ID: {statusUpdateError.id})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusUpdateError(null)}
+                className="text-slate-400 hover:text-white cursor-pointer"
+                aria-label="Dismiss error"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           {/* Top Scan & Dataset Control Strip */}
           <div className="matrix-control-strip">
             <div className="control-strip-left">
@@ -388,13 +514,9 @@ export const Top20VerificationSection: React.FC<{
                     const newId = e.target.value;
                     setSelectedDatasetId(newId);
                     const d = datasets.find((item) => item.dataset_id === newId);
-                    if (d) {
-                      const newDate = d.has_ground_truth ? '2025-04-18' : (d.end_date || evaluationDate);
-                      setEvaluationDate(newDate);
-                      executeBackendScan(newDate, newId);
-                    } else {
-                      executeBackendScan(evaluationDate, newId);
-                    }
+                    const validDate = d?.end_date || d?.start_date || evaluationDate;
+                    setEvaluationDate(validDate);
+                    loadQueueFindings(validDate, newId);
                   }}
                   className="control-select font-mono"
                 >
@@ -427,33 +549,44 @@ export const Top20VerificationSection: React.FC<{
                 <input
                   type="date"
                   value={evaluationDate}
+                  min={currentDataset?.start_date || undefined}
+                  max={currentDataset?.end_date || undefined}
                   onChange={(e) => {
-                    setEvaluationDate(e.target.value);
+                    const newDate = e.target.value;
+                    setEvaluationDate(newDate);
+                    loadQueueFindings(newDate, selectedDatasetId);
                   }}
                   className="control-date-input font-mono"
                 />
                 <div className="date-presets">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEvaluationDate('2025-04-18');
-                      executeBackendScan('2025-04-18');
-                    }}
-                    className={`preset-date-btn ${evaluationDate === '2025-04-18' ? 'active' : ''}`}
-                    title="Benchmark date with verified positive ground-truth labels in synthetic suite"
-                  >
-                    2025-04-18 (Benchmark)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEvaluationDate('2025-04-20');
-                      executeBackendScan('2025-04-20');
-                    }}
-                    className={`preset-date-btn ${evaluationDate === '2025-04-20' ? 'active' : ''}`}
-                  >
-                    2025-04-20
-                  </button>
+                  {currentDataset?.end_date && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = currentDataset.end_date!;
+                        setEvaluationDate(d);
+                        loadQueueFindings(d, selectedDatasetId);
+                      }}
+                      className={`preset-date-btn ${evaluationDate === currentDataset.end_date ? 'active' : ''}`}
+                      title={`Latest available date in ${currentDataset.name}`}
+                    >
+                      Latest ({currentDataset.end_date})
+                    </button>
+                  )}
+                  {currentDataset?.start_date && currentDataset.start_date !== currentDataset.end_date && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = currentDataset.start_date!;
+                        setEvaluationDate(d);
+                        loadQueueFindings(d, selectedDatasetId);
+                      }}
+                      className={`preset-date-btn ${evaluationDate === currentDataset.start_date ? 'active' : ''}`}
+                      title={`Start date of ${currentDataset.name}`}
+                    >
+                      Start ({currentDataset.start_date})
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -545,9 +678,20 @@ export const Top20VerificationSection: React.FC<{
               <div className="backend-conn-chip">
                 <span className={`conn-dot ${backendOnline ? 'online' : 'offline'}`} />
                 <span className="conn-label font-mono">
-                  {queueSourceLabel || backendStatusMsg || (backendOnline ? 'Live API' : 'Demo Mode')}
+                  {queueSourceLabel || backendStatusMsg || (backendOnline ? 'Live API' : 'Backend Offline')}
                 </span>
               </div>
+
+            {!backendOnline && (
+              <div className="p-3 mb-4 rounded bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={16} className="text-amber-400 shrink-0" />
+                  <span>
+                    <strong>FastAPI Backend Offline:</strong> Live scans, store telemetry, and database persistence are unavailable at http://localhost:8000. Start backend: <code className="bg-black/40 px-1 py-0.5 rounded text-cyan-300">uvicorn backend.app.main:app --reload --port 8000</code>
+                  </span>
+                </div>
+              </div>
+            )}
 
               {/* Risk Tier Toggle */}
               <div className="risk-toggle-group">
@@ -712,13 +856,14 @@ export const Top20VerificationSection: React.FC<{
                         <div className="status-dropdown-wrap">
                           <select
                             value={item.status}
+                            disabled={isUpdatingStatusId === item.id}
                             onChange={(e) =>
                               handleUpdateStatus(
                                 item.id,
                                 e.target.value as VerificationItem['status']
                               )
                             }
-                            className="status-select"
+                            className={`status-select ${isUpdatingStatusId === item.id ? 'opacity-50 cursor-wait' : ''}`}
                           >
                             <option value="Pending Inspection">Pending Inspection</option>
                             <option value="Floor Check Dispatched">Floor Check Dispatched</option>
@@ -750,15 +895,15 @@ export const Top20VerificationSection: React.FC<{
         </div>
       </div>
 
-      {/* Selected Alert Detail Drawer Modal */}
+      {/* Selected Alert Detail Drawer */}
       {selectedItemForDetail && (
         <div
-          className="modal-backdrop"
+          className="detail-drawer-backdrop"
           onClick={() => setSelectedItemForDetail(null)}
           role="dialog"
           aria-modal="true"
         >
-          <div className="modal-dialog glass-panel" onClick={(e) => e.stopPropagation()}>
+          <div className="detail-drawer glass-panel" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="header-left">
                 <div className="modal-icon-badge">
@@ -776,6 +921,7 @@ export const Top20VerificationSection: React.FC<{
                 onClick={() => setSelectedItemForDetail(null)}
                 className="close-btn"
                 aria-label="Close details"
+                title="Close (Esc)"
               >
                 <X size={18} />
               </button>
@@ -897,30 +1043,33 @@ export const Top20VerificationSection: React.FC<{
                 <div className="outcome-btn-group">
                   <button
                     type="button"
+                    disabled={isUpdatingStatusId === selectedItemForDetail.id}
                     onClick={() => {
                       handleUpdateStatus(selectedItemForDetail.id, 'Resolved (Restocked)');
                     }}
-                    className="btn-outcome resolved"
+                    className={`btn-outcome resolved ${isUpdatingStatusId === selectedItemForDetail.id ? 'opacity-50 cursor-wait' : ''}`}
                   >
                     <PackageCheck size={14} />
                     <span>Restocked from Backroom</span>
                   </button>
                   <button
                     type="button"
+                    disabled={isUpdatingStatusId === selectedItemForDetail.id}
                     onClick={() => {
                       handleUpdateStatus(selectedItemForDetail.id, 'Misplaced (Found)');
                     }}
-                    className="btn-outcome found"
+                    className={`btn-outcome found ${isUpdatingStatusId === selectedItemForDetail.id ? 'opacity-50 cursor-wait' : ''}`}
                   >
                     <CheckCircle2 size={14} />
                     <span>Found in Wrong Aisle</span>
                   </button>
                   <button
                     type="button"
+                    disabled={isUpdatingStatusId === selectedItemForDetail.id}
                     onClick={() => {
                       handleUpdateStatus(selectedItemForDetail.id, 'Floor Check Dispatched');
                     }}
-                    className="btn-outcome dispatched"
+                    className={`btn-outcome dispatched ${isUpdatingStatusId === selectedItemForDetail.id ? 'opacity-50 cursor-wait' : ''}`}
                   >
                     <Clock size={14} />
                     <span>Associate Dispatched</span>
@@ -1064,21 +1213,28 @@ export const Top20VerificationSection: React.FC<{
                       <p className="text-xs text-slate-300 max-w-md mx-auto mb-4">
                         {evaluationResult.message || `No evaluation ground-truth labels exist for date ${evaluationDate}. Benchmark metrics are withheld in compliance with non-fabrication policy.`}
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEvaluationDate('2025-04-18');
-                          executeBackendScan('2025-04-18');
-                          setIsEvalModalOpen(false);
-                          setTimeout(() => {
-                            handleOpenEvaluation();
-                          }, 600);
-                        }}
-                        className="btn-primary text-xs py-2 px-4 mx-auto inline-flex items-center gap-2"
-                      >
-                        <Calendar size={13} />
-                        <span>Switch to Benchmark Date (2025-04-18)</span>
-                      </button>
+                      {(() => {
+                        const parsedDates = (evaluationResult.message?.match(/\b\d{4}-\d{2}-\d{2}\b/g) || []).filter(d => d !== evaluationDate);
+                        const suggestedDate = parsedDates[parsedDates.length - 1] || currentDataset?.end_date || currentDataset?.start_date;
+                        if (!suggestedDate) return null;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEvaluationDate(suggestedDate);
+                              loadQueueFindings(suggestedDate, selectedDatasetId);
+                              setIsEvalModalOpen(false);
+                              setTimeout(() => {
+                                handleOpenEvaluation();
+                              }, 600);
+                            }}
+                            className="btn-primary text-xs py-2 px-4 mx-auto inline-flex items-center gap-2"
+                          >
+                            <Calendar size={13} />
+                            <span>Switch to Available Date ({suggestedDate})</span>
+                          </button>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1293,18 +1449,18 @@ export const Top20VerificationSection: React.FC<{
         .dashboard-section-viewport {
           position: relative;
           width: 100%;
-          padding: 100px 0 80px;
+          padding: 80px 0 70px;
           background: transparent;
-          overflow: hidden;
+          overflow: visible;
           z-index: 10;
         }
 
         .section-container {
           position: relative;
           z-index: 10;
-          max-width: 1400px;
+          max-width: 1320px;
           margin: 0 auto;
-          padding: 0 24px;
+          padding: 0 20px;
         }
 
         .section-header-centered {
@@ -1522,7 +1678,10 @@ export const Top20VerificationSection: React.FC<{
 
         /* Table */
         .queue-table-scroll {
+          max-height: 520px;
+          overflow-y: auto;
           overflow-x: auto;
+          scrollbar-gutter: stable;
         }
 
         .queue-table {
@@ -1533,14 +1692,19 @@ export const Top20VerificationSection: React.FC<{
         }
 
         .queue-table th {
+          position: sticky;
+          top: 0;
+          z-index: 5;
           padding: 14px 18px;
           font-family: var(--font-mono);
           font-size: 0.68rem;
           color: var(--text-muted);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          background: rgba(15, 23, 42, 0.85);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(11, 21, 40, 0.96);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           white-space: nowrap;
         }
 
@@ -1678,7 +1842,81 @@ export const Top20VerificationSection: React.FC<{
           padding: 8px 16px;
         }
 
-        /* Modal Details Drawer */
+        /* Right-Side Detail Drawer */
+        .detail-drawer-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(3, 7, 18, 0.72);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 100;
+          display: flex;
+          justify-content: flex-end;
+          align-items: stretch;
+          padding: 16px;
+          overflow: hidden;
+        }
+
+        .detail-drawer {
+          width: 100%;
+          max-width: 580px;
+          height: 100%;
+          max-height: calc(100vh - 32px);
+          background: rgba(10, 20, 38, 0.96);
+          border: 1px solid rgba(56, 189, 248, 0.35);
+          border-radius: 16px;
+          box-shadow: -15px 0 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 242, 254, 0.1);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          animation: slideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        .detail-drawer .modal-header {
+          flex-shrink: 0;
+        }
+
+        .detail-drawer .modal-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 24px;
+        }
+
+        @media (max-width: 768px) {
+          .detail-drawer-backdrop {
+            padding: 0;
+            align-items: flex-end;
+          }
+
+          .detail-drawer {
+            max-width: 100%;
+            max-height: 88vh;
+            border-radius: 20px 20px 0 0;
+            animation: slideInUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+        }
+
+        @keyframes slideInUp {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+
+        /* Modal Dialog (for Evaluation and History modals) */
         .modal-backdrop {
           position: fixed;
           inset: 0;

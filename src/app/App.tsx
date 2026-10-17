@@ -137,6 +137,7 @@ export const App: React.FC = () => {
         <Top20VerificationSection
           onLaunchScanner={() => scrollToSection('demo')}
           onOpenDataset={() => setDatasetModalOpen(true)}
+          datasetId={activeDatasetId}
           onScanExecuted={(scanId, datasetId, evalDate) => {
             setActiveScanId(scanId);
             if (datasetId) setActiveDatasetId(datasetId);

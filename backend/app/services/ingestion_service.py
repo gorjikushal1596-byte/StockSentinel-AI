@@ -14,9 +14,10 @@ from typing import Any
 import pyarrow.parquet as pq
 import openpyxl
 
-from backend.app.schemas.dataset import ColumnMetadata, DatasetProfile, TARGET_SEMANTIC_FIELDS
+from app.schemas.dataset import ColumnMetadata, DatasetProfile, TARGET_SEMANTIC_FIELDS
 
-UPLOAD_BASE_DIR = Path("backend/data/uploads")
+_backend_root = Path(__file__).resolve().parent.parent.parent
+UPLOAD_BASE_DIR = _backend_root / "data" / "uploads"
 MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB per file limit
 PREVIEW_ROW_LIMIT = 20
 

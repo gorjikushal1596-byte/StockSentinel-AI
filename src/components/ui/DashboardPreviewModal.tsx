@@ -1,5 +1,7 @@
-import React from 'react';
-import { X, Layers, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Layers, AlertTriangle, CheckCircle, Clock, Database, RefreshCw } from 'lucide-react';
+import { apiClient, type FindingResponse } from '@/services/apiClient';
+import { mapStatusToFrontend } from '@/services/apiAdapters';
 
 interface DashboardPreviewModalProps {
   isOpen: boolean;
@@ -7,46 +9,42 @@ interface DashboardPreviewModalProps {
 }
 
 export const DashboardPreviewModal: React.FC<DashboardPreviewModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
+  const [liveFindings, setLiveFindings] = useState<FindingResponse[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const topDailyChecks = [
-    {
-      sku: 'SKU #4587',
-      name: 'Smart Aura Soundbar',
-      aisle: 'Aisle 4-B',
-      systemStock: 6,
-      sales7d: 0,
-      risk: 'CRITICAL',
-      status: 'Floor Check Dispatched',
-    },
-    {
-      sku: 'SKU #2891',
-      name: 'Ultra Wireless Noise-Cancelling Buds',
-      aisle: 'Aisle 2-A',
-      systemStock: 9,
-      sales7d: 0,
-      risk: 'CRITICAL',
-      status: 'Pending Verification',
-    },
-    {
-      sku: 'SKU #1042',
-      name: 'USB-C GaN 100W Fast Charger',
-      aisle: 'Aisle 5-C',
-      systemStock: 14,
-      sales7d: 1,
-      risk: 'HIGH',
-      status: 'Pending Verification',
-    },
-    {
-      sku: 'SKU #6320',
-      name: 'MagCharge Dual Wireless Stand',
-      aisle: 'Aisle 3-D',
-      systemStock: 4,
-      sales7d: 0,
-      risk: 'HIGH',
-      status: 'Resolved (Restocked)',
-    },
-  ];
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    setIsLoading(true);
+    setErrorMsg(null);
+
+    apiClient
+      .getFindings({ limit: 10 })
+      .then((res) => {
+        if (!isMounted) return;
+        if (res && res.length > 0) {
+          setLiveFindings(res);
+        } else {
+          setLiveFindings([]);
+          setErrorMsg('No findings currently persisted in database. Run a scan to populate.');
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.warn('DashboardPreviewModal getFindings error:', err);
+        setErrorMsg('Backend connection failed. Ensure FastAPI is running on port 8000.');
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
@@ -59,7 +57,11 @@ export const DashboardPreviewModal: React.FC<DashboardPreviewModalProps> = ({ is
             </div>
             <div>
               <h3 className="modal-title">Store Telemetry — Prioritized Daily Top 20</h3>
-              <p className="modal-subtitle">Autonomous Sentinel Anomaly Detection across 25 Stores</p>
+              <p className="modal-subtitle">
+                {liveFindings.length > 0
+                  ? `Live Database Telemetry • ${liveFindings.length} Persisted Findings Loaded`
+                  : 'FastAPI Backend Telemetry Cross-Validation'}
+              </p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="close-btn" aria-label="Close modal">
@@ -69,55 +71,80 @@ export const DashboardPreviewModal: React.FC<DashboardPreviewModalProps> = ({ is
 
         {/* Content */}
         <div className="modal-body">
-          <div className="telemetry-table-wrapper">
-            <table className="telemetry-table">
-              <thead>
-                <tr>
-                  <th>SKU / Product</th>
-                  <th>Location</th>
-                  <th>Ledger Units</th>
-                  <th>7d Sales</th>
-                  <th>Risk Tier</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topDailyChecks.map((row, idx) => (
-                  <tr key={idx} className={row.risk === 'CRITICAL' ? 'row-critical' : ''}>
-                    <td>
-                      <div className="sku-cell">
-                        <span className="sku-code">{row.sku}</span>
-                        <span className="sku-title">{row.name}</span>
-                      </div>
-                    </td>
-                    <td><span className="location-tag">{row.aisle}</span></td>
-                    <td><span className="stock-pos">+{row.systemStock}</span></td>
-                    <td>
-                      <span className={row.sales7d === 0 ? 'sales-zero' : 'sales-low'}>
-                        {row.sales7d}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`risk-tag risk-${row.risk.toLowerCase()}`}>
-                        {row.risk === 'CRITICAL' && <AlertTriangle size={11} />}
-                        {row.risk}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="status-cell">
-                        {row.status.includes('Dispatched') && <Clock size={12} className="text-amber" />}
-                        {row.status.includes('Resolved') && <CheckCircle size={12} className="text-emerald" />}
-                        {row.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {errorMsg && (
+            <div className="p-3 mb-3 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-300 flex items-center gap-2">
+              <AlertTriangle size={15} />
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
-          <div className="table-footer-note">
-            <span>Showing Top 4 of 20 daily prioritized checks for Store #12</span>
+          {isLoading ? (
+            <div className="py-12 text-center text-slate-400 text-sm flex flex-col items-center gap-2">
+              <RefreshCw size={24} className="animate-spin text-cyan-400" />
+              <span>Loading live findings from database...</span>
+            </div>
+          ) : (
+            <div className="telemetry-table-wrapper">
+              <table className="telemetry-table">
+                <thead>
+                  <tr>
+                    <th>SKU / Product</th>
+                    <th>Location / Store</th>
+                    <th>Ledger Units</th>
+                    <th>Zero-Sales Days</th>
+                    <th>Risk Tier</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {liveFindings.map((row) => (
+                    <tr key={row.finding_id} className={row.severity === 'CRITICAL' ? 'row-critical' : ''}>
+                      <td>
+                        <div className="sku-cell">
+                          <span className="sku-code">{row.sku_id}</span>
+                          <span className="sku-title">{row.product_name || `Product ${row.sku_id}`}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="location-tag">
+                          {row.shelf_bay || (row.store_name ? row.store_name.split('—')[0].trim() : row.store_id)}
+                        </span>
+                      </td>
+                      <td><span className="stock-pos">+{row.recorded_stock}</span></td>
+                      <td>
+                        <span className="sales-zero font-mono font-bold">
+                          {row.consecutive_zero_days}d
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`risk-tag risk-${row.severity.toLowerCase()}`}>
+                          {row.severity === 'CRITICAL' && <AlertTriangle size={11} />}
+                          {row.severity}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="status-cell">
+                          {row.status === 'unresolved' && <Clock size={12} className="text-amber" />}
+                          {row.status === 'verified' && <CheckCircle size={12} className="text-emerald" />}
+                          {mapStatusToFrontend(row.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="table-footer-note flex items-center justify-between">
+            <span className="text-xs text-slate-400 flex items-center gap-1">
+              <Database size={13} className="text-cyan-primary" />
+              <span>
+                {liveFindings.length > 0
+                  ? `Showing ${liveFindings.length} persisted findings strictly from real database records`
+                  : 'Awaiting database scan findings'}
+              </span>
+            </span>
             <button type="button" onClick={onClose} className="btn-secondary close-sub-btn">
               Close Preview
             </button>

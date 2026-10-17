@@ -7,8 +7,8 @@ using Poisson inter-arrival modeling, promotion calendar data, and weekday deman
 """
 
 import math
-from datetime import datetime
-from backend.app.db.models import DailyRecord, SKU
+from datetime import datetime, timedelta
+from app.db.models import DailyRecord, SKU
 
 
 class DetectionCandidate:
@@ -84,29 +84,61 @@ class AnomalyDetectionService:
         if current_stock <= 0:
             return None
 
-        # Condition 2: Calculate consecutive zero-sales days ending on evaluation_date
+        # Condition 2: Calculate consecutive calendar zero-sales days ending on evaluation_date.
+        # Ensure calendar contiguity: if dates are nonconsecutive (e.g. gaps in calendar records),
+        # the contiguous zero streak terminates at the gap.
+        # If on_hand_stock <= 0 on any day, sales were 0 due to genuine out-of-stock, not phantom.
         consecutive_zero_days = 0
+        holiday_zero_days = 0
         is_promo_during_zero = False
+        eval_dt = datetime.strptime(latest_record.date, "%Y-%m-%d").date()
+        expected_date = eval_dt
+
         for rec in reversed(sorted_records):
+            rec_dt = datetime.strptime(rec.date, "%Y-%m-%d").date()
+            if rec_dt != expected_date:
+                # Calendar date gap detected: streak of contiguous calendar days terminates
+                break
+
+            # Must have zero sales AND positive physical ledger stock
             if rec.sales == 0 and rec.on_hand_stock > 0:
                 consecutive_zero_days += 1
-                if rec.is_promotion:
+                if getattr(rec, "is_holiday", False):
+                    holiday_zero_days += 1
+                if getattr(rec, "is_promotion", False):
                     is_promo_during_zero = True
+                expected_date = expected_date - timedelta(days=1)
             else:
+                # Sales occurred or stock was <= 0 (genuine stockout)
                 break
 
         # Check threshold
         if consecutive_zero_days < self.base_threshold_days:
             return None
 
+        # Condition 2b: Holiday-related false positive protection
+        # On recognized holidays (store closure, reduced trading), zero sales cannot be assumed
+        # to reflect customer arrival failure caused by phantom inventory.
+        # Active trading zero days must satisfy base threshold.
+        trading_zero_days = consecutive_zero_days - holiday_zero_days
+        if trading_zero_days < self.base_threshold_days:
+            return None
+
         # Condition 3: Baseline demand calculation (prior history before the zero-sales streak)
+        # Use in-stock days where possible so out-of-stock censorship does not deflate velocity.
         history_before_streak = sorted_records[:-consecutive_zero_days]
         if not history_before_streak:
             history_before_streak = sorted_records
 
-        total_sales_history = sum(r.sales for r in history_before_streak)
-        history_days_count = max(1, len(history_before_streak))
-        daily_velocity = total_sales_history / history_days_count
+        in_stock_history = [r for r in history_before_streak if r.on_hand_stock > 0]
+        if in_stock_history:
+            # Exclude holiday closures from baseline velocity if sufficient non-holiday records exist
+            normal_in_stock = [r for r in in_stock_history if not getattr(r, "is_holiday", False)]
+            calc_records = normal_in_stock if len(normal_in_stock) >= 3 else in_stock_history
+            total_sales_history = sum(r.sales for r in calc_records)
+            daily_velocity = total_sales_history / len(calc_records)
+        else:
+            daily_velocity = sum(r.sales for r in history_before_streak) / max(1, len(history_before_streak))
 
         # Incorporate promotion uplift: if item is currently on promo, expected rate is higher
         promo_multiplier = 1.6 if is_promo_during_zero else 1.0
@@ -120,9 +152,10 @@ class AnomalyDetectionService:
         # P(X = 0) = exp(-mu)
         poisson_p_zero = math.exp(-expected_sales_during_streak)
 
-        # If probability of 0 sales is high (e.g. > 15%), this is a normal dry spell for a slow mover!
-        # Do not flag as an anomaly!
-        if poisson_p_zero > 0.15 and daily_velocity < 0.35 and consecutive_zero_days < 7:
+        # If probability of 0 sales is high (e.g. > 15%) for a slow-moving item,
+        # observing zero sales is statistically consistent with normal arrival variance!
+        # Do not flag as an anomaly.
+        if poisson_p_zero > 0.15 and daily_velocity < 0.35:
             return None
 
         # Condition 5: Confidence Calculation
@@ -217,6 +250,14 @@ class AnomalyDetectionService:
                 "value": "Active Promo",
                 "status": "alert",
                 "detail": "Promotional calendar flagged active discount during zero-sales streak",
+            })
+
+        if holiday_zero_days > 0:
+            signals.append({
+                "name": "Holiday Factor",
+                "value": f"{holiday_zero_days} Holiday Day(s)",
+                "status": "info",
+                "detail": f"{holiday_zero_days} holiday day(s) evaluated; active trading zero days = {trading_zero_days}",
             })
 
         return DetectionCandidate(

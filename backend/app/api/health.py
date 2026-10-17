@@ -3,8 +3,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from backend.app.db.database import get_db
-from backend.app.db.models import Store, SKU, DailyRecord, Finding
+from app.db.database import get_db
+from app.db.models import Store, SKU, DailyRecord, Finding
 
 router = APIRouter(tags=["Health"])
 

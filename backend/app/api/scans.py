@@ -4,14 +4,14 @@ import json
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from backend.app.db.database import get_db
-from backend.app.db.models import Finding
-from backend.app.db.repository import StockSentinelRepository
-from backend.app.schemas.scan import ScanRequest, ScanSummary, ScanResponse
-from backend.app.schemas.finding import FindingResponse
-from backend.app.schemas.inventory import TimeSeriesPoint
-from backend.app.services.detection_service import AnomalyDetectionService
-from backend.app.services.scoring_service import ScoringRankingService
+from app.db.database import get_db
+from app.db.models import Finding
+from app.db.repository import StockSentinelRepository
+from app.schemas.scan import ScanRequest, ScanSummary, ScanResponse
+from app.schemas.finding import FindingResponse
+from app.schemas.inventory import TimeSeriesPoint
+from app.services.detection_service import AnomalyDetectionService
+from app.services.scoring_service import ScoringRankingService
 
 router = APIRouter(prefix="/scans", tags=["Scans"])
 
@@ -108,16 +108,27 @@ def execute_scan(request: ScanRequest, db: Session = Depends(get_db)):
             if candidate and candidate.confidence_score >= request.confidence_cutoff:
                 candidates.append(candidate)
 
-        # 3. Deterministically rank and enforce top-20 per store
+        # 3. Deterministically rank and enforce top-20 per store (strict <=20 constraint)
+        effective_max = min(20, max(1, request.max_findings_per_store or 20))
         store_findings = ScoringRankingService.rank_store_candidates(
             candidates=candidates,
             scan_id=scan_id,
-            max_per_store=request.max_findings_per_store,
+            max_per_store=effective_max,
             dataset_id=request.dataset_id,
         )
         all_findings_to_save.extend(store_findings)
 
-    # 4. Persist scan and findings
+    # 4. Carry forward previously recorded associate verification statuses
+    prior_statuses = repo.get_latest_finding_statuses(
+        evaluation_date=request.evaluation_date,
+        dataset_id=request.dataset_id,
+    )
+    for f in all_findings_to_save:
+        key = (f.store_id, f.sku_id)
+        if key in prior_statuses:
+            f.status = prior_statuses[key]
+
+    # 5. Persist scan and findings
     scan = repo.create_scan(
         scan_id=scan_id,
         evaluation_date=request.evaluation_date,

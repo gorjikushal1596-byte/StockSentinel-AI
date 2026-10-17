@@ -2,13 +2,13 @@
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from backend.app.db.database import get_db
-from backend.app.schemas.recovery import (
+from app.db.database import get_db
+from app.schemas.recovery import (
     RecoveryEstimateRequest,
     RecoveryEstimateResponse,
     PersistAssumptionsRequest,
 )
-from backend.app.services.recovery_service import RecoveryCalculationService
+from app.services.recovery_service import RecoveryCalculationService
 
 router = APIRouter(prefix="/recovery-estimate", tags=["ROI & Recovery"])
 

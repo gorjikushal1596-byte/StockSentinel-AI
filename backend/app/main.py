@@ -15,16 +15,16 @@ import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.db.database import init_db, SessionLocal
-from backend.app.services.data_generator import generate_and_seed_data
-from backend.app.api.health import router as health_router
-from backend.app.api.scans import router as scans_router
-from backend.app.api.findings import router as findings_router
-from backend.app.api.evaluation import router as evaluation_router
-from backend.app.api.recovery import router as recovery_router
-from backend.app.api.stores import router as stores_router
-from backend.app.api.ingest import router as ingest_router
-from backend.app.api.datasets import router as datasets_router
+from app.db.database import init_db, SessionLocal
+from app.services.data_generator import generate_and_seed_data
+from app.api.health import router as health_router
+from app.api.scans import router as scans_router
+from app.api.findings import router as findings_router
+from app.api.evaluation import router as evaluation_router
+from app.api.recovery import router as recovery_router
+from app.api.stores import router as stores_router
+from app.api.ingest import router as ingest_router
+from app.api.datasets import router as datasets_router
 
 
 @asynccontextmanager
@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     init_db()
     db = SessionLocal()
     try:
-        from backend.app.services.dataset_service import DatasetService
+        from app.services.dataset_service import DatasetService
         svc = DatasetService(db)
         existing = svc.list_datasets()
         has_benchmark = any(d.dataset_id.startswith("DS_SYNTHETIC") and d.status == "imported" for d in existing)

@@ -1,8 +1,8 @@
 """Pydantic schemas for scan requests, responses, and histories."""
 
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
-from backend.app.schemas.finding import FindingResponse
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+from app.schemas.finding import FindingResponse
 
 
 class ScanRequest(BaseModel):
@@ -11,7 +11,14 @@ class ScanRequest(BaseModel):
     store_id: str | None = Field(None, description="Optional store filter. If null, scans all stores.")
     threshold_days: int = Field(3, ge=1, le=30, description="Minimum consecutive zero-sales days threshold")
     confidence_cutoff: float = Field(50.0, ge=0.0, le=100.0, description="Minimum confidence cutoff")
-    max_findings_per_store: int = Field(20, ge=1, le=50, description="Hard cap per store-day (PDF requires <= 20)")
+    max_findings_per_store: int = Field(20, ge=1, le=20, description="Strict operational cap per store-day (<= 20)")
+
+    @field_validator("max_findings_per_store", mode="before")
+    @classmethod
+    def clamp_max_findings(cls, v: int | None) -> int:
+        if v is None:
+            return 20
+        return min(20, max(1, int(v)))
 
 
 class ScanSummary(BaseModel):
