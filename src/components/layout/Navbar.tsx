@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, ChevronRight, Sparkles, Menu, X, Database } from 'lucide-react';
+import { ShieldAlert, ChevronRight, Sparkles, Menu, X, Database, Activity } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
 interface NavbarProps {
@@ -32,12 +32,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const navLinks = [
+    { label: 'Home', href: '#hero' },
     { label: 'Problem', href: '#problem' },
-    { label: 'Pipeline', href: '#architecture' },
-    { label: 'Features', href: '#features' },
-    { label: 'Live Scanner', href: '#demo' },
-    { label: 'Top-20 Queue', href: '#dashboard' },
-    { label: 'Impact & ROI', href: '#impact' },
+    { label: 'How It Works', href: '#architecture' },
+    { label: 'Dashboard', href: '#dashboard' },
+    { label: 'Impact', href: '#impact' },
+    { label: 'Team', href: '#team' },
   ];
 
   // Observe which section is active using native IntersectionObserver
@@ -50,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       'demo',
       'dashboard',
       'impact',
+      'team',
       'cta',
     ];
 
@@ -168,11 +169,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenDataset}
-              className="nav-link-btn dataset-trigger-btn"
-              title="Manage custom datasets (CSV, XLSX, JSON, Parquet)"
+              className="nav-cta-btn"
+              id="nav-get-started-btn"
+              title="Open dataset upload and import wizard"
             >
-              <Database size={15} className="text-cyan-400" />
-              <span className="btn-text-desktop">Datasets</span>
+              <Sparkles size={14} />
+              <span>Get Started</span>
+              <ChevronRight size={14} />
             </button>
           )}
 
@@ -185,12 +188,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 handleScrollTo(e, '#demo');
               }
             }}
-            className="nav-cta-btn"
+            className="nav-link-btn dataset-trigger-btn"
             title="Navigate to live anomaly scanner"
           >
-            <Sparkles size={14} />
-            <span>Run Scanner</span>
-            <ChevronRight size={14} />
+            <Activity size={14} className="text-cyan-400" />
+            <span className="btn-text-desktop">Scanner</span>
           </button>
 
           {/* Mobile menu toggle */}

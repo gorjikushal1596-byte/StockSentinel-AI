@@ -8,6 +8,7 @@ import { FeatureExplorerSection } from '@/features/features/FeatureExplorerSecti
 import { LiveDetectionDemoSection } from '@/features/scanner/LiveDetectionDemoSection';
 import { Top20VerificationSection } from '@/features/verification/Top20VerificationSection';
 import { BusinessImpactSection } from '@/features/impact/BusinessImpactSection';
+import { TeamSection } from '@/features/team/TeamSection';
 import { FinalCtaSection } from '@/features/cta/FinalCtaSection';
 import { InteractiveSimulationModal } from '@/components/ui/InteractiveSimulationModal';
 import { DashboardPreviewModal } from '@/components/ui/DashboardPreviewModal';
@@ -97,16 +98,16 @@ export const App: React.FC = () => {
       {/* Top Fixed Global Navigation Bar */}
       <Navbar
         onNavigateToSection={scrollToSection}
-        onOpenDemo={() => scrollToSection('demo')}
+        onOpenDemo={() => setDemoModalOpen(true)}
         onOpenDashboard={() => scrollToSection('dashboard')}
         onOpenDataset={() => setDatasetModalOpen(true)}
       />
 
-      {/* Main Website Flow: 8 Connected Frames */}
+      {/* Main Website Flow: Connected Frames */}
       <main id="main-content">
         {/* FRAME 1: Hero Command Center */}
         <HeroSection
-          onOpenDemo={() => scrollToSection('demo')}
+          onOpenDemo={() => setDemoModalOpen(true)}
           onOpenDashboard={() => scrollToSection('dashboard')}
         />
 
@@ -158,9 +159,12 @@ export const App: React.FC = () => {
           refreshTrigger={impactRefreshTrigger}
         />
 
-        {/* FRAME 8: Final CTA, 3D Emblem & Global Footer */}
+        {/* FRAME 8: Multidisciplinary Team & Operational Pillars */}
+        <TeamSection />
+
+        {/* FRAME 9: Final CTA, 3D Emblem & Global Footer */}
         <FinalCtaSection
-          onLaunchDemo={() => scrollToSection('demo')}
+          onLaunchDemo={() => setDemoModalOpen(true)}
           onOpenDashboard={() => scrollToSection('dashboard')}
         />
       </main>

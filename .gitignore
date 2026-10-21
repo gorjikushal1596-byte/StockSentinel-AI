@@ -74,6 +74,7 @@ pnpm-debug.log*
 lerna-debug.log*
 tmp/
 temp/
+ralph-loop-antigravity/
 
 # IDE & Editor Files
 .vscode/*

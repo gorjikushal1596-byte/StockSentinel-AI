@@ -243,7 +243,7 @@ export interface StoreOption {
   active_skus?: number;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://127.0.0.1:8001/api');
+const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://127.0.0.1:8000/api');
 
 /**
  * Helper to fetch with a timeout

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Activity, Eye, Zap, ShieldCheck, Play, Pause, Layers } from 'lucide-react';
+import { Activity, Eye, Zap, ShieldCheck, Play, Pause, Layers } from 'lucide-react';
 import { WarehouseScene } from '@/components/3d/WarehouseScene';
 import { FloatingInventoryPanel } from '@/components/ui/FloatingInventoryPanel';
 import { SalesStockChart } from '@/features/dashboard/SalesStockChart';
 import { DetectionAlertPanel } from '@/components/ui/DetectionAlertPanel';
+import { Top20QueuePreviewPanel } from '@/components/ui/Top20QueuePreviewPanel';
 
 interface HeroSectionProps {
   onOpenDemo: () => void;
@@ -89,6 +90,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* =======================================================
+          IN-SITU WAREHOUSE SHELF RETICLE & RED PHANTOM ALERT
+         ======================================================= */}
+      <div className={`hero-shelf-focal-target stage-fade-${stage >= 3 ? 'in' : 'out'}`} aria-hidden="true">
+        <div className="shelf-target-bracket">
+          <div className="bracket-tag">
+            <span className="target-dot" />
+            <span>UNIT 74B // VOID [EMPTY SHELF DETECTED]</span>
+          </div>
+          <div className="bracket-box">
+            <span className="corner tl" />
+            <span className="corner tr" />
+            <span className="corner bl" />
+            <span className="corner br" />
+            <div className="bracket-reticle" />
+          </div>
+          <div className="bracket-callout">
+            <span className="ledger-stat">LEDGER: +6</span>
+            <span className="divider">/</span>
+            <span className="shelf-stat">SHELF: 0</span>
+          </div>
+        </div>
+      </div>
+
+      {/* =======================================================
           THREE.JS 3D TELEMETRY & SCANNER OVERLAY
          ======================================================= */}
       <div className={`hero-3d-stage stage-fade-${stage >= 2 ? 'in' : 'out'}`}>
@@ -129,7 +154,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* Headline */}
             <h1 className={`hero-headline stage-anim ${stage >= 5 ? 'stage-active' : ''}`}>
               Detect What Your Inventory{' '}
-              <span style={{ color: '#FFFFFF' }}>Can't See.</span>
+              <span className="hero-headline-accent">Can't See.</span>
             </h1>
 
             {/* Description */}
@@ -157,9 +182,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onOpenDemo}
                 className="btn-primary"
                 id="hero-primary-cta"
+                title="Launch working demo walkthrough"
               >
-                <span>See It in Action</span>
-                <ArrowRight size={17} />
+                <Play size={16} fill="currentColor" />
+                <span>Watch Demo</span>
               </button>
 
               <button
@@ -167,6 +193,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onOpenDashboard}
                 className="btn-secondary"
                 id="hero-secondary-cta"
+                title="Explore Top-20 verification dashboard"
               >
                 <Activity size={17} />
                 <span>Explore Dashboard</span>
@@ -206,6 +233,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Panel C: Detection Alert (Positioned to align visually with the empty shelf region) */}
               <div className="floating-panel-wrap panel-c-wrap animate-float-delayed">
                 <DetectionAlertPanel onInvestigate={onOpenDemo} />
+              </div>
+
+              {/* Panel D: Top-20 Verification Queue Preview */}
+              <div className="floating-panel-wrap panel-d-wrap">
+                <Top20QueuePreviewPanel onOpenDashboard={onOpenDashboard} />
               </div>
             </div>
           </div>
@@ -430,6 +462,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           text-shadow: 0 4px 28px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.95);
         }
 
+        .hero-headline-accent {
+          color: #38bdf8;
+          background: linear-gradient(135deg, #00f2fe 0%, #38bdf8 50%, #60a5fa 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.4));
+        }
+
         @media (min-width: 768px) {
           .hero-headline {
             font-size: 3.6rem;
@@ -440,6 +480,134 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           .hero-headline {
             font-size: 4.1rem;
           }
+        }
+
+        /* In-situ Warehouse Shelf Target Reticle */
+        .hero-shelf-focal-target {
+          position: absolute;
+          top: 42%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 3;
+          pointer-events: none;
+          transition: opacity 1.2s ease-out;
+        }
+
+        @media (max-width: 1080px) {
+          .hero-shelf-focal-target {
+            display: none;
+          }
+        }
+
+        .shelf-target-bracket {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .bracket-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 3px 10px;
+          border-radius: 4px;
+          background: rgba(239, 68, 68, 0.25);
+          border: 1px solid rgba(239, 68, 68, 0.6);
+          font-family: var(--font-mono);
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          color: #fca5a5;
+          box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+          backdrop-filter: blur(8px);
+        }
+
+        .target-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ef4444;
+          box-shadow: 0 0 8px #ef4444;
+          animation: alertBlink 1.4s infinite;
+        }
+
+        .bracket-box {
+          position: relative;
+          width: 180px;
+          height: 100px;
+          border: 1px dashed rgba(239, 68, 68, 0.45);
+          border-radius: 6px;
+          background: rgba(239, 68, 68, 0.05);
+          box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.18), 0 0 18px rgba(239, 68, 68, 0.15);
+        }
+
+        .bracket-box .corner {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border-color: #ef4444;
+          border-style: solid;
+        }
+
+        .bracket-box .corner.tl {
+          top: -1px;
+          left: -1px;
+          border-width: 2px 0 0 2px;
+        }
+
+        .bracket-box .corner.tr {
+          top: -1px;
+          right: -1px;
+          border-width: 2px 2px 0 0;
+        }
+
+        .bracket-box .corner.bl {
+          bottom: -1px;
+          left: -1px;
+          border-width: 0 0 2px 2px;
+        }
+
+        .bracket-box .corner.br {
+          bottom: -1px;
+          right: -1px;
+          border-width: 0 2px 2px 0;
+        }
+
+        .bracket-reticle {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 20px;
+          height: 20px;
+          transform: translate(-50%, -50%);
+          border: 1px solid rgba(239, 68, 68, 0.7);
+          border-radius: 50%;
+        }
+
+        .bracket-callout {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-family: var(--font-mono);
+          font-size: 0.65rem;
+          font-weight: 800;
+          padding: 2px 8px;
+          border-radius: 4px;
+          background: rgba(3, 7, 18, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .ledger-stat {
+          color: #38bdf8;
+        }
+
+        .bracket-callout .divider {
+          color: #64748b;
+        }
+
+        .shelf-stat {
+          color: #f87171;
         }
 
         .hero-description {
@@ -526,7 +694,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         /* Right Column Overlays */
         .hero-right-column {
           position: relative;
-          min-height: 520px;
+          min-height: 540px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -545,8 +713,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         @media (min-width: 1080px) {
           .analytics-overlays-cluster {
-            max-width: 540px;
-            height: 560px;
+            max-width: 620px;
+            height: 600px;
             display: block;
             position: relative;
           }
@@ -557,22 +725,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           }
 
           .panel-a-wrap {
-            top: 10px;
+            top: 0px;
             left: 0px;
             z-index: 22;
           }
 
           .panel-b-wrap {
-            bottom: 30px;
-            left: 20px;
+            bottom: 10px;
+            left: 0px;
             z-index: 23;
           }
 
           /* Aligns visually with the empty shelf focal zone */
           .panel-c-wrap {
-            top: 135px;
+            top: 25px;
             right: 0px;
             z-index: 24;
+          }
+
+          .panel-d-wrap {
+            bottom: 10px;
+            right: 0px;
+            z-index: 25;
           }
         }
 
