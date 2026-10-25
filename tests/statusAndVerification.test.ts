@@ -1,5 +1,4 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import { test, expect } from 'vitest';
 import {
   mapStatusToBackend,
   mapStatusToFrontend,
@@ -10,24 +9,24 @@ import type { FindingResponse } from '../src/services/apiClient.ts';
 import type { VerificationStatus } from '../src/types/verification.ts';
 
 test('mapStatusToBackend correctly translates all frontend UI statuses and backend keys', () => {
-  assert.equal(mapStatusToBackend('Pending Inspection'), 'pending');
-  assert.equal(mapStatusToBackend('Floor Check Dispatched'), 'unresolved');
-  assert.equal(mapStatusToBackend('Resolved (Restocked)'), 'verified');
-  assert.equal(mapStatusToBackend('Misplaced (Found)'), 'false_positive');
+  expect(mapStatusToBackend('Pending Inspection')).toBe('pending');
+  expect(mapStatusToBackend('Floor Check Dispatched')).toBe('unresolved');
+  expect(mapStatusToBackend('Resolved (Restocked)')).toBe('verified');
+  expect(mapStatusToBackend('Misplaced (Found)')).toBe('false_positive');
   // Idempotent with backend keys
-  assert.equal(mapStatusToBackend('pending'), 'pending');
-  assert.equal(mapStatusToBackend('unresolved'), 'unresolved');
-  assert.equal(mapStatusToBackend('verified'), 'verified');
-  assert.equal(mapStatusToBackend('false_positive'), 'false_positive');
+  expect(mapStatusToBackend('pending')).toBe('pending');
+  expect(mapStatusToBackend('unresolved')).toBe('unresolved');
+  expect(mapStatusToBackend('verified')).toBe('verified');
+  expect(mapStatusToBackend('false_positive')).toBe('false_positive');
 });
 
 test('mapStatusToFrontend correctly translates all backend API statuses and display names', () => {
-  assert.equal(mapStatusToFrontend('pending'), 'Pending Inspection');
-  assert.equal(mapStatusToFrontend('unresolved'), 'Floor Check Dispatched');
-  assert.equal(mapStatusToFrontend('verified'), 'Resolved (Restocked)');
-  assert.equal(mapStatusToFrontend('false_positive'), 'Misplaced (Found)');
+  expect(mapStatusToFrontend('pending')).toBe('Pending Inspection');
+  expect(mapStatusToFrontend('unresolved')).toBe('Floor Check Dispatched');
+  expect(mapStatusToFrontend('verified')).toBe('Resolved (Restocked)');
+  expect(mapStatusToFrontend('false_positive')).toBe('Misplaced (Found)');
   // Idempotent with display names
-  assert.equal(mapStatusToFrontend('Floor Check Dispatched'), 'Floor Check Dispatched');
+  expect(mapStatusToFrontend('Floor Check Dispatched')).toBe('Floor Check Dispatched');
 });
 
 test('status mapping is bijective round-trip across all valid statuses', () => {
@@ -41,20 +40,20 @@ test('status mapping is bijective round-trip across all valid statuses', () => {
   for (const status of frontendStatuses) {
     const backend = mapStatusToBackend(status);
     const roundTripped = mapStatusToFrontend(backend);
-    assert.equal(roundTripped, status);
+    expect(roundTripped).toBe(status);
   }
 });
 
 test('isBackendFinding correctly distinguishes backend finding IDs from preset simulation IDs', () => {
-  assert.equal(isBackendFinding('fnd_8a12bc9d01ef'), true);
-  assert.equal(isBackendFinding('FINDING_STORE01_SKU02'), true);
-  assert.equal(isBackendFinding('fnd_uuid_12345'), true);
-  assert.equal(isBackendFinding('V-01'), false);
-  assert.equal(isBackendFinding('V-05'), false);
-  assert.equal(isBackendFinding('DEMO-123'), false);
-  assert.equal(isBackendFinding('SIM-001'), false);
-  assert.equal(isBackendFinding(''), false);
-  assert.equal(isBackendFinding(null), false);
+  expect(isBackendFinding('fnd_8a12bc9d01ef')).toBe(true);
+  expect(isBackendFinding('FINDING_STORE01_SKU02')).toBe(true);
+  expect(isBackendFinding('fnd_uuid_12345')).toBe(true);
+  expect(isBackendFinding('V-01')).toBe(false);
+  expect(isBackendFinding('V-05')).toBe(false);
+  expect(isBackendFinding('DEMO-123')).toBe(false);
+  expect(isBackendFinding('SIM-001')).toBe(false);
+  expect(isBackendFinding('')).toBe(false);
+  expect(isBackendFinding(null)).toBe(false);
 });
 
 test('mapFindingToVerificationItem maps backend finding fields and status accurately', () => {
@@ -77,13 +76,14 @@ test('mapFindingToVerificationItem maps backend finding fields and status accura
 
   const item = mapFindingToVerificationItem(mockFinding);
 
-  assert.equal(item.id, 'fnd_a1b2c3d4e5f6');
-  assert.equal(item.storeId, 'Store #001');
-  assert.equal(item.sku, 'SKU_1001');
-  assert.equal(item.productName, 'Organic Almond Milk 1L');
-  assert.equal(item.recordedUnits, 12);
-  assert.equal(item.expectedWeeklySales, 17.5);
-  assert.equal(item.riskTier, 'CRITICAL');
-  assert.equal(item.status, 'Floor Check Dispatched');
-  assert.equal(item.confidenceScore, 94.5);
+  expect(item.id).toBe('fnd_a1b2c3d4e5f6');
+  expect(item.storeId).toBe('Store #001');
+  expect(item.sku).toBe('SKU_1001');
+  expect(item.productName).toBe('Organic Almond Milk 1L');
+  expect(item.recordedUnits).toBe(12);
+  expect(item.expectedWeeklySales).toBe(17.5);
+  expect(item.riskTier).toBe('CRITICAL');
+  expect(item.status).toBe('Floor Check Dispatched');
+  expect(item.confidenceScore).toBe(94.5);
 });
+

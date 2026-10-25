@@ -1,5 +1,4 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import { test, expect } from 'vitest';
 import {
   calculateBusinessImpact,
   formatRupees,
@@ -31,9 +30,9 @@ test('1. Bounded Recoverable Units strictly respects physical ledger stock limit
   });
 
   // Total ledger stock flagged is 5
-  assert.equal(result.total_ledger_units_flagged, 5);
+  expect(result.total_ledger_units_flagged).toBe(5);
   // Estimated recoverable units is bounded by stock: min(5, 10 * 3.0 * 0.6) = min(5, 18) = 5
-  assert.equal(result.estimated_recoverable_units, 5);
+  expect(result.estimated_recoverable_units).toBe(5);
 });
 
 test('2. Distinguishes verified vs false positives vs pending findings without equating flagged with recoveries', () => {
@@ -77,21 +76,21 @@ test('2. Distinguishes verified vs false positives vs pending findings without e
     unverified_conversion_rate: 60,
   });
 
-  assert.equal(result.total_findings, 3);
-  assert.equal(result.verified_findings, 1);
-  assert.equal(result.false_positives, 1);
-  assert.equal(result.pending_findings, 1);
-  assert.equal(result.inspected_count, 2);
+  expect(result.total_findings).toBe(3);
+  expect(result.verified_findings).toBe(1);
+  expect(result.false_positives).toBe(1);
+  expect(result.pending_findings).toBe(1);
+  expect(result.inspected_count).toBe(2);
   // Measured conversion rate = 1 / 2 = 50%
-  assert.equal(result.measured_conversion_rate_percent, 50);
-  assert.equal(result.effective_conversion_rate_percent, 50);
+  expect(result.measured_conversion_rate_percent).toBe(50);
+  expect(result.effective_conversion_rate_percent).toBe(50);
 
   // F1 (10 units * 1.0) + F2 (10 units * 0.0) + F3 (10 units * 0.5) = 15 units
-  assert.equal(result.estimated_recoverable_units, 15);
+  expect(result.estimated_recoverable_units).toBe(15);
   // Recoverable revenue: 15 units * 200 = 3000
-  assert.equal(result.estimated_recoverable_revenue, 3000);
+  expect(result.estimated_recoverable_revenue).toBe(3000);
   // Revenue at risk is all nominal stock: (10 + 10 + 10) * 200 = 6000
-  assert.equal(result.potential_revenue_at_risk, 6000);
+  expect(result.potential_revenue_at_risk).toBe(6000);
 });
 
 test('3. Computes profit impact using detected unit costs or prompts when cost is absent', () => {
@@ -116,10 +115,10 @@ test('3. Computes profit impact using detected unit costs or prompts when cost i
     unverified_conversion_rate: 60,
   });
 
-  assert.equal(resultWithCost.has_unit_cost_data, true);
-  assert.equal(resultWithCost.has_profit_impact, true);
+  expect(resultWithCost.has_unit_cost_data).toBe(true);
+  expect(resultWithCost.has_profit_impact).toBe(true);
   // 5 units * (500 - 300) = 1000
-  assert.equal(resultWithCost.estimated_profit_impact, 1000);
+  expect(resultWithCost.estimated_profit_impact).toBe(1000);
 
   // Case B: No costs available and no margin assumption
   const findingsNoCost: FindingItemSummary[] = [
@@ -142,9 +141,9 @@ test('3. Computes profit impact using detected unit costs or prompts when cost i
     unverified_conversion_rate: 60,
   });
 
-  assert.equal(resultNoCost.has_unit_cost_data, false);
-  assert.equal(resultNoCost.has_profit_impact, false);
-  assert.ok(resultNoCost.missing_cost_note !== null);
+  expect(resultNoCost.has_unit_cost_data).toBe(false);
+  expect(resultNoCost.has_profit_impact).toBe(false);
+  expect(resultNoCost.missing_cost_note).not.toBeNull();
 
   // Case C: Provided user margin assumption (e.g. 30%)
   const resultWithAssumedMargin = calculateBusinessImpact({
@@ -155,9 +154,9 @@ test('3. Computes profit impact using detected unit costs or prompts when cost i
     gross_margin_percent: 30,
   });
 
-  assert.equal(resultWithAssumedMargin.has_profit_impact, true);
+  expect(resultWithAssumedMargin.has_profit_impact).toBe(true);
   // Recoverable revenue = 5 units * 500 = 2500. Profit = 2500 * 0.30 = 750
-  assert.equal(resultWithAssumedMargin.estimated_profit_impact, 750);
+  expect(resultWithAssumedMargin.estimated_profit_impact).toBe(750);
 });
 
 test('4. Annualization is only justified when observation period >= 7 days', () => {
@@ -182,8 +181,8 @@ test('4. Annualization is only justified when observation period >= 7 days', () 
     unverified_conversion_rate: 60,
     observation_period_days: 3,
   });
-  assert.equal(resultShort.can_annualize, false);
-  assert.equal(resultShort.annualized_recoverable_revenue, null);
+  expect(resultShort.can_annualize).toBe(false);
+  expect(resultShort.annualized_recoverable_revenue).toBeNull();
 
   // Sufficient observation window (e.g. 108 days)
   const resultLong = calculateBusinessImpact({
@@ -193,15 +192,16 @@ test('4. Annualization is only justified when observation period >= 7 days', () 
     unverified_conversion_rate: 60,
     observation_period_days: 108,
   });
-  assert.equal(resultLong.can_annualize, true);
-  assert.ok(resultLong.annualized_recoverable_revenue! > 0);
-  assert.equal(resultLong.annualization_multiplier.toFixed(2), (365 / 108).toFixed(2));
+  expect(resultLong.can_annualize).toBe(true);
+  expect(resultLong.annualized_recoverable_revenue).toBeGreaterThan(0);
+  expect(resultLong.annualization_multiplier.toFixed(2)).toBe((365 / 108).toFixed(2));
 });
 
 test('5. Currency formatting handles Lakhs and thousands correctly', () => {
-  assert.equal(formatRupees(450000), '₹4.50 Lakhs');
-  assert.equal(formatRupees(15000000), '₹1.50 Cr');
-  assert.equal(formatRupees(2500), '₹2,500');
-  assert.equal(formatUSD(250000), '$250.0k');
-  assert.equal(formatUSD(1500000), '$1.50M');
+  expect(formatRupees(450000)).toBe('₹4.50 Lakhs');
+  expect(formatRupees(15000000)).toBe('₹1.50 Cr');
+  expect(formatRupees(2500)).toBe('₹2,500');
+  expect(formatUSD(250000)).toBe('$250.0k');
+  expect(formatUSD(1500000)).toBe('$1.50M');
 });
+

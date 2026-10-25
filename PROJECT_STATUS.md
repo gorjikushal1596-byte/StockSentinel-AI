@@ -38,13 +38,13 @@ fc2a3db  Initial commit: StockSentinel AI full-stack application
 - **Status:** ✅ 32 passed, 0 failed
 - **Warnings:** 81 `datetime.utcnow()` deprecation warnings (cosmetic, non-blocking)
 
-### Frontend Tests (`npx vitest run`)
-- **Status:** ⚠️ 5 tests pass, 3 test files fail to load
-- **Root cause:** The 3 test files use `import test from 'node:test'` (Node.js built-in runner) instead of Vitest's `test`/`describe`/`it` from `'vitest'`. Vitest finds them but can't execute them.
-- **Failing files:**
-  - `tests/businessImpact.test.ts` — 5 well-written tests, just wrong test runner import
-  - `tests/scannerEngine.test.ts` — 3 tests, same import issue
-  - `tests/statusAndVerification.test.ts` — 5 tests, same import issue
+### Frontend Tests (`npm test` / `npx vitest run`)
+- **Status:** ✅ 13 passed, 0 failed across all 3 test files
+- **Resolution:** Updated `tests/businessImpact.test.ts`, `tests/scannerEngine.test.ts`, and `tests/statusAndVerification.test.ts` from `node:test` / `node:assert/strict` to Vitest's `test` and `expect`.
+- **Failing files resolved:**
+  - `tests/businessImpact.test.ts` — ✅ 5 tests pass
+  - `tests/scannerEngine.test.ts` — ✅ 3 tests pass
+  - `tests/statusAndVerification.test.ts` — ✅ 5 tests pass
 
 ---
 
@@ -107,7 +107,7 @@ fc2a3db  Initial commit: StockSentinel AI full-stack application
 
 | # | Item | File(s) | Effort |
 |---|------|---------|--------|
-| 1 | **Frontend test imports:** Change `import test from 'node:test'` and `import assert from 'node:assert/strict'` to Vitest equivalents (`import { test, expect, describe } from 'vitest'`) in 3 test files | `tests/businessImpact.test.ts`, `tests/scannerEngine.test.ts`, `tests/statusAndVerification.test.ts` | ~30 min |
+| 1 | **Frontend test imports:** Converted 3 test files to Vitest imports & expect assertions | `tests/businessImpact.test.ts`, `tests/scannerEngine.test.ts`, `tests/statusAndVerification.test.ts` | ✅ FIXED (13/13 passing) |
 | 2 | **Visual verification:** Open dev server and visually confirm the hero section matches the cinematic reference design | Browser check | ~15 min |
 | 3 | **Responsive testing:** Verify mobile/tablet breakpoints for new hero layout and navbar | Browser check | ~15 min |
 
