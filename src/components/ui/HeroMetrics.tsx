@@ -70,6 +70,16 @@ export const HeroMetrics: React.FC = () => {
   return (
     <div className="hero-metrics-section">
       <div className="metrics-strip-wrapper glass-panel motion-fade-up">
+        <div className="metrics-strip-header">
+          <div className="telemetry-badge">
+            <span className={`pulse-dot ${isOnline ? 'online' : 'waiting'}`} />
+            <span className="telemetry-text font-mono">
+              {isOnline ? 'LIVE TELEMETRY STREAM // FASTAPI PORT 8000' : 'SYSTEM TELEMETRY // CONNECTING TO BACKEND'}
+            </span>
+          </div>
+          <span className="telemetry-source font-mono">STORE-LEVEL POS & ERP RECONCILIATION</span>
+        </div>
+
         <div className="metrics-grid">
           {metrics.map((item, index) => (
             <div
@@ -104,17 +114,72 @@ export const HeroMetrics: React.FC = () => {
         }
 
         .metrics-strip-wrapper {
-          padding: 24px 28px;
+          padding: 20px 24px 24px;
           border-radius: 16px;
           background: rgba(8, 16, 32, 0.78);
           border: 1px solid rgba(56, 189, 248, 0.18);
           box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 242, 254, 0.05);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+
+        .metrics-strip-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 16px;
+          margin-bottom: 16px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .telemetry-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .pulse-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        .pulse-dot.online {
+          background: #10b981;
+          box-shadow: 0 0 8px #10b981;
+          animation: pulseGreen 2s infinite ease-in-out;
+        }
+
+        .pulse-dot.waiting {
+          background: #f59e0b;
+          box-shadow: 0 0 8px #f59e0b;
+        }
+
+        @keyframes pulseGreen {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .telemetry-text {
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: var(--cyan-primary);
+        }
+
+        .telemetry-source {
+          font-size: 0.64rem;
+          color: var(--text-dim);
+          letter-spacing: 0.06em;
         }
 
         .metrics-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 20px;
+          gap: 16px;
         }
 
         @media (min-width: 768px) {
@@ -126,16 +191,25 @@ export const HeroMetrics: React.FC = () => {
         @media (min-width: 1080px) {
           .metrics-grid {
             grid-template-columns: repeat(5, 1fr);
-            gap: 24px;
+            gap: 20px;
           }
         }
 
         .metric-item {
           display: flex;
           flex-direction: column;
-          padding: 8px 12px;
+          padding: 10px 14px;
           border-radius: 10px;
-          transition: background 0.2s;
+          background: rgba(15, 23, 42, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .metric-item:hover {
+          background: rgba(56, 189, 248, 0.06);
+          border-color: rgba(56, 189, 248, 0.25);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(0, 242, 254, 0.06);
         }
 
         .metric-item:not(:last-child) {

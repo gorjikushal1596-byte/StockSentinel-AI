@@ -36,6 +36,7 @@ export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({
     { label: 'Live Scanner Demo', href: '#demo' },
     { label: 'Top-20 Daily Queue', href: '#dashboard' },
     { label: 'ROI Impact Calculator', href: '#impact' },
+    { label: 'Architecture & Team', href: '#team' },
   ];
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {

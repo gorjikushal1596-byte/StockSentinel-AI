@@ -903,7 +903,11 @@ export const Top20VerificationSection: React.FC<{
           role="dialog"
           aria-modal="true"
         >
-          <div className="detail-drawer glass-panel" onClick={(e) => e.stopPropagation()}>
+          <div
+            key={selectedItemForDetail.id}
+            className="detail-drawer glass-panel"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <div className="header-left">
                 <div className="modal-icon-badge">
@@ -1452,7 +1456,6 @@ export const Top20VerificationSection: React.FC<{
           padding: 80px 0 70px;
           background: transparent;
           overflow: visible;
-          z-index: 10;
         }
 
         .section-container {
@@ -1845,7 +1848,11 @@ export const Top20VerificationSection: React.FC<{
         /* Right-Side Detail Drawer */
         .detail-drawer-backdrop {
           position: fixed;
-          inset: 0;
+          top: var(--navbar-height, 72px);
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: calc(100vh - var(--navbar-height, 72px));
           background: rgba(3, 7, 18, 0.72);
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
@@ -1861,7 +1868,7 @@ export const Top20VerificationSection: React.FC<{
           width: 100%;
           max-width: 580px;
           height: 100%;
-          max-height: calc(100vh - 32px);
+          max-height: calc(100vh - var(--navbar-height, 72px) - 32px);
           background: rgba(10, 20, 38, 0.96);
           border: 1px solid rgba(56, 189, 248, 0.35);
           border-radius: 16px;
@@ -1870,6 +1877,7 @@ export const Top20VerificationSection: React.FC<{
           flex-direction: column;
           overflow: hidden;
           animation: slideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+          scroll-margin-top: 80px;
         }
 
         @keyframes slideInRight {
@@ -1891,17 +1899,20 @@ export const Top20VerificationSection: React.FC<{
           flex: 1;
           overflow-y: auto;
           padding: 24px;
+          scroll-padding-top: 16px;
         }
 
         @media (max-width: 768px) {
           .detail-drawer-backdrop {
+            top: var(--navbar-height, 72px);
+            height: calc(100vh - var(--navbar-height, 72px));
             padding: 0;
             align-items: flex-end;
           }
 
           .detail-drawer {
             max-width: 100%;
-            max-height: 88vh;
+            max-height: calc(100vh - var(--navbar-height, 72px) - 16px);
             border-radius: 20px 20px 0 0;
             animation: slideInUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
           }
@@ -1919,9 +1930,14 @@ export const Top20VerificationSection: React.FC<{
         /* Modal Dialog (for Evaluation and History modals) */
         .modal-backdrop {
           position: fixed;
-          inset: 0;
+          top: var(--navbar-height, 72px);
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: calc(100vh - var(--navbar-height, 72px));
           background: rgba(3, 7, 18, 0.85);
           backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           z-index: 100;
           display: flex;
           align-items: center;

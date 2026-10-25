@@ -11,6 +11,7 @@
   --bg-surface: rgba(10, 20, 38, 0.72);
   --bg-surface-elevated: rgba(15, 28, 54, 0.82);
   --bg-surface-alert: rgba(36, 12, 18, 0.78);
+  --navbar-height: 72px;
 
   /* Primary Electric Accents */
   --cyan-primary: #00f2fe;
