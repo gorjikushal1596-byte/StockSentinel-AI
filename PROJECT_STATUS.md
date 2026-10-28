@@ -1,8 +1,8 @@
 # StockSentinel AI — Project Status
 
-> **Snapshot date:** 2026-10-28 14:25 IST  
+> **Snapshot date:** 2026-10-28 18:40 IST  
 > **Branch:** `feature/cinematic-website-rebuild`  
-> **Latest commit:** `5828b7b` — *docs: record verified live OmniRoute gpt-oss-120b execution*  
+> **Latest commit:** `aaedfca` — *feat(telemetry): scope hero metrics to active dataset, align INR currency symbols, and sync test counts*  
 
 ---
 
@@ -20,6 +20,8 @@
 ### Recent Commit History (latest first)
 
 ```
+aaedfca  feat(telemetry): scope hero metrics to active dataset, align INR currency symbols, and sync test counts
+6c58dfb  feat(audit): sync evaluation fallback text, INR currency formatting, and requirements matrix
 5828b7b  docs: record verified live OmniRoute gpt-oss-120b execution
 6ba3ef5  feat(ai): configure dotenv loading and live JSON parsing for OmniRoute gpt-oss-120b
 ef61522  docs: update PROJECT_STATUS.md with OmniRoute gpt-oss-120b integration and test results
@@ -36,40 +38,49 @@ fc2a3db  Initial commit: StockSentinel AI full-stack application
 
 ---
 
-## Verified Build & Test Results
+## Verified Build & Benchmark Results
 
-All test suites and production builds verified clean immediately prior to this snapshot:
+All test suites, production builds, and official evaluation scripts verified clean:
 
-### 1. Frontend Tests (`npm test` / `npx vitest run`)
-- **Status:** ✅ 13 passed, 0 failed across all 3 test files (executed in 180 ms)
+### 1. Official Evaluation Benchmark (`python evaluate.py`)
+- **Benchmark:** R1 The Phantom Stock-Out Detector
+- **Status:** ✅ Clean execution on held-out ground truth
+- **Metrics:**
+  - **Overall Recall:** `100.0%` (2/2 ground truth positives identified in Top-20)
+  - **Mean Precision@20:** `40.0%`
+  - **Stores Evaluated:** 5 stores
+  - **Zero Leakage:** Ground truth labels isolated in `ground_truth_labels` table, never accessible during feature calculation or ranking.
+  - **Strict Fallback:** Displays `"Evaluation unavailable — ground-truth labels required"` when labels are absent.
 
-### 2. Frontend Production Build (`npm run build`)
-- **Status:** ✅ SUCCESS with 0 warnings (built in 551 ms)
-- **Main Client Bundle:** 314 kB (down from 1,535 kB) with Three.js and on-demand modal code-splitting.
-
-### 3. Backend Tests (`pytest backend/tests -v`)
-- **Status:** ✅ 34 passed, 0 failed, 0 warnings (executed in 4.22 s)
+### 2. Backend Tests (`pytest backend/tests -v`)
+- **Status:** ✅ 34 passed, 0 failed, 0 warnings (executed in 4.75 s)
 - **All 81 `datetime.utcnow()` deprecation warnings resolved.**
 - **Reasoning Tests:** 2/2 tests pass (`test_deep_reasoning_fallback_when_omniroute_disabled`, `test_reasoning_service_live_mock`).
 
+### 3. Frontend Tests (`npm test` / `vitest run`)
+- **Status:** ✅ 13 passed, 0 failed across all 3 test files (executed in 214 ms)
+
+### 4. Frontend Production Build (`npm run build`)
+- **Status:** ✅ SUCCESS with 0 errors/warnings (built in 489 ms)
+- **Main Client Bundle:** 315 kB (down from 1,535 kB) with Three.js and on-demand modal code-splitting.
+
 ---
 
-## Completed Work (Latest Session)
+## Completed Master Audit Deliverables
 
-### 1. Dynamic Import Code-Splitting & Three.js Chunk Isolation (Commit `e82eb10`)
-- Slashed initial JavaScript bundle footprint from **1,535 kB** to **314 kB** (~80% payload reduction).
-- Isolated Three.js spatial canvases (`WarehouseScene`, `ShelfComparison3D`, `Sentinel3DEmblemCanvas`) with `React.lazy()` and `Suspense`.
-- Split large dialog views (`DatasetManagerModal`, `DashboardPreviewModal`, `InteractiveSimulationModal`) into on-demand dynamic chunks.
+1. **Requirements Audit Matrix (`REQUIREMENTS_AUDIT.md`):**
+   - Traceability across all 16 official sub-requirements from `docs/R1_The_Phantom_Stock-Out_Detector.pdf`.
+   - Every requirement verified with associated test files, endpoints, and frontend components.
 
-### 2. Backend UTC Datetime Modernization (Commit `e82eb10`)
-- Replaced all deprecated `datetime.utcnow()` instances with `datetime.now(timezone.utc)` and `utc_now` helper across `models.py`, `repository.py`, and `dataset_service.py`.
-- Verified zero deprecation warnings on Python 3.14.
+2. **Currency Standardization to INR (₹):**
+   - Standardized throughout `HeroMetrics`, `Top20VerificationSection`, `BusinessImpactSection`, `ProcessPipelineSection`, and `LiveDetectionDemoSection`.
+   - Added `formatINR` in `src/utils/formatters.ts` (`en-IN` format).
 
-### 3. OmniRoute + `gpt-oss-120b` (Groq) Integration (Commits `b7273f0`, `6ba3ef5`, `5828b7b`)
-- Created `OmniRouteReasoningService` (`backend/app/services/reasoning_service.py`) querying OmniRoute's `/v1/chat/completions` endpoint for `groq/openai/gpt-oss-120b`.
-- Added `POST /api/findings/{finding_id}/deep-reasoning` endpoint with resilient deterministic fallback.
-- Added live AI Reasoning card with actionable 3-step associate inspection checklists in the Top-20 product detail drawer.
-- Verified live end-to-end execution streaming real reasoning from `gpt-oss-120b`.
+3. **OmniRoute + Groq `gpt-oss-120b` Integration:**
+   - Live AI reasoning engine providing associate action checklists, root-cause hypotheses, and confidence rationales directly in the Top-20 detail drawer.
+
+4. **Multi-Dataset Invalidation:**
+   - Selecting or importing datasets dynamically scopes `HeroMetrics`, findings queries, scan parameters, and evaluation metrics without stale cross-contamination.
 
 ---
 
@@ -79,12 +90,12 @@ All test suites and production builds verified clean immediately prior to this s
 |---|---------|--------|--------------|
 | 1 | **Navbar** | ✅ Complete | Glassmorphism, live FastAPI/radar status, active section tracking, mobile hamburger |
 | 2 | **Hero Section** | ✅ Complete | Video background + fallback, lazy 3D Warehouse toggle, reticle, floating telemetry panels, Top20QueuePreviewPanel |
-| 3 | **Hero Metrics Strip** | ✅ Complete | Real-time FastAPI :8000 telemetry badge, pulse dot, card hover glow, responsive 5-column layout |
+| 3 | **Hero Metrics Strip** | ✅ Complete | Real-time FastAPI :8000 telemetry badge, dataset-scoped counters, responsive 5-column layout |
 | 4 | **The Phantom Problem** | ✅ Complete | Lazy 3D shelf discrepancy, dilemma contrast, collapsible root causes accordion |
-| 5 | **How It Works (Pipeline)** | ✅ Complete | 5-stage interactive stepper, zero-hardware guarantee, telemetry pills |
+| 5 | **How It Works (Pipeline)** | ✅ Complete | 5-stage interactive stepper, zero-hardware guarantee, telemetry pills, ₹ pricing |
 | 6 | **Feature Explorer** | ✅ Complete | 6 deep-dive capabilities with interactive mini-visualizations |
-| 7 | **Live Detection Demo** | ✅ Complete | Client simulation presets (critical, slow-mover, genuine-oos) + real backend scan execution |
-| 8 | **Dashboard (Top-20)** | ✅ Complete | Fixed detail drawer below navbar, live FastAPI persistence, evidence drawer, evaluation modal |
+| 7 | **Live Detection Demo** | ✅ Complete | Client simulation presets (critical, slow-mover, genuine-oos) + real backend scan execution in ₹ |
+| 8 | **Dashboard (Top-20)** | ✅ Complete | Sticky navbar clearance, live FastAPI persistence, evidence drawer, OmniRoute `gpt-oss-120b` reasoning checklist |
 | 9 | **Business Impact** | ✅ Complete | Empirical ROI model, bounded recovery calculation, INR/USD toggle, assumption persistence |
 | 10 | **Team Section (Frame 8)** | ✅ Complete | Kushal Gorji (Lead Architect) + 4 operational pillar cards with glassmorphism styling |
 | 11 | **Final CTA & Footer** | ✅ Complete | Lazy 3D emblem canvas, synchronized 7-link navigation footer |
