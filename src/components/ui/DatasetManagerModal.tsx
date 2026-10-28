@@ -292,43 +292,6 @@ export const DatasetManagerModal: React.FC<DatasetManagerModalProps> = ({
 
               {step === 1 && (
                 <div className="step-content">
-                  <div className="synthetic-demo-card mb-4 p-4 rounded-xl border border-cyan-500/40 bg-gradient-to-r from-cyan-950/60 to-slate-900/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-cyan-950/30">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                        <Sparkles size={18} className="text-cyan-400" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-white">Judge Demonstration Shortcut</span>
-                          <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
-                            OFFICIAL SYNTHETIC SUITE
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-300 mt-0.5">
-                          Directly import the supplied 30,000-row synthetic test dataset (5 stores, 50 SKUs, 120-day span, 106 held-out evaluation labels) in 1 click.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleLoadSynthetic}
-                      disabled={isUploading}
-                      className="btn-primary shrink-0 text-xs py-2 px-3 whitespace-nowrap"
-                    >
-                      {isUploading ? (
-                        <>
-                          <RefreshCw size={14} className="animate-spin" />
-                          <span>Ingesting...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={14} />
-                          <span>Load Synthetic Dataset</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
                   <div
                     className="dropzone-area"
                     onClick={() => fileInputRef.current?.click()}
@@ -717,6 +680,19 @@ export const DatasetManagerModal: React.FC<DatasetManagerModalProps> = ({
                   ))}
                 </div>
               )}
+
+              <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                <span>Looking for the official hackathon benchmark suite?</span>
+                <button
+                  type="button"
+                  onClick={handleLoadSynthetic}
+                  disabled={isUploading}
+                  className="text-cyan-400 hover:text-cyan-300 font-mono underline inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <Sparkles size={12} />
+                  <span>Restore Canonical Benchmark (30,000 rows)</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
