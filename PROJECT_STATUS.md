@@ -1,8 +1,8 @@
 # StockSentinel AI — Project Status
 
-> **Snapshot date:** 2026-10-28 11:55 IST  
+> **Snapshot date:** 2026-10-28 14:12 IST  
 > **Branch:** `feature/cinematic-website-rebuild`  
-> **Latest commit:** `e82eb10` — *feat(perf): code-split Three.js spatial canvases, lazy-load modals, and resolve backend UTC datetime deprecations*  
+> **Latest commit:** `b7273f0` — *feat(ai): integrate OmniRoute gpt-oss-120b reasoning engine for associate action checklists*  
 
 ---
 
@@ -20,6 +20,7 @@
 ### Recent Commit History (latest first)
 
 ```
+b7273f0  feat(ai): integrate OmniRoute gpt-oss-120b reasoning engine for associate action checklists
 e82eb10  feat(perf): code-split Three.js spatial canvases, lazy-load modals, and resolve backend UTC datetime deprecations
 f510210  docs: update PROJECT_STATUS.md snapshot with Top-20 detail drawer fix and resume guide
 54b708c  fix(ui): clear sticky navbar overlap on Top-20 product detail panel and modals
@@ -37,25 +38,14 @@ fc2a3db  Initial commit: StockSentinel AI full-stack application
 All test suites and production builds verified clean immediately prior to this snapshot:
 
 ### 1. Frontend Tests (`npm test` / `npx vitest run`)
-- **Status:** ✅ 13 passed, 0 failed across all 3 test files (executed in 207 ms)
-- **Files Verified:**
-  - `tests/businessImpact.test.ts` — ✅ 5 tests pass
-  - `tests/scannerEngine.test.ts` — ✅ 3 tests pass
-  - `tests/statusAndVerification.test.ts` — ✅ 5 tests pass
+- **Status:** ✅ 13 passed, 0 failed across all 3 test files (executed in 180 ms)
 
 ### 2. Frontend Production Build (`npm run build`)
-- **Status:** ✅ SUCCESS with 0 warnings (built in 447 ms)
-- **Artifacts & Chunk Breakdown:**
-  - `dist/assets/index-FVKj1WYh.js` (312.83 kB │ gzip: 61.43 kB) — **dropped from 1,535 kB!**
-  - `dist/assets/vendor-three-DihB_Fa2.js` (907.17 kB │ gzip: 240.30 kB) — isolated vendor chunk
-  - `dist/assets/vendor-react-BcY9Rbab.js` (214.06 kB │ gzip: 66.86 kB)
-  - `dist/assets/vendor-lucide-Ib-T-Zw3.js` (27.64 kB │ gzip: 9.73 kB)
-  - Dynamic 3D canvas chunks: `WarehouseScene` (16.2 kB), `ShelfComparison3D` (6.2 kB), `Sentinel3DEmblemCanvas` (3.1 kB)
-  - Dynamic on-demand modal chunks: `DatasetManagerModal` (30.4 kB), `InteractiveSimulationModal` (12.7 kB), `DashboardPreviewModal` (9.8 kB)
+- **Status:** ✅ SUCCESS with 0 warnings (built in 551 ms)
 
 ### 3. Backend Tests (`pytest backend/tests -v`)
-- **Status:** ✅ 32 passed, 0 failed (executed in 4.66 s)
-- **Warnings:** ✅ **0 warnings** (all 81 `datetime.utcnow()` deprecation warnings resolved using timezone-aware UTC datetime)
+- **Status:** ✅ 34 passed, 0 failed, 0 warnings (executed in 4.22 s)
+- **New Tests:** `test_deep_reasoning_fallback_when_omniroute_disabled`, `test_reasoning_service_live_mock` passing.
 
 ---
 
