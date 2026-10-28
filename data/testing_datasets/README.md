@@ -24,3 +24,4 @@ These 5 focused datasets allow you to verify each detection behavior individuall
 4. Drag & drop any of the CSV files from `data/testing_datasets/`.
 5. Review the automated column schema preview and click **"Import & Set Active"**.
 6. The entire application (Hero Metrics, Top-20 queue, Sales-vs-Stock charts, and ROI Calculator) immediately recalculates on that specific dataset!
+

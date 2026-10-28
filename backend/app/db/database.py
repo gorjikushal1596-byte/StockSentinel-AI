@@ -58,9 +58,36 @@ def init_db() -> None:
     from app.db import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
-    # SQLite non-destructive column addition for dataset_id
+    # SQLite non-destructive column addition for dataset_id and constraint modernization
     if DATABASE_URL.startswith("sqlite"):
         with engine.connect() as conn:
+            # 1. Migrate ground_truth_labels if it has old cross-dataset UNIQUE constraint
+            try:
+                res_gt = conn.execute(text("SELECT sql FROM sqlite_master WHERE type='table' AND name='ground_truth_labels';")).fetchone()
+                if res_gt and res_gt[0] and "uq_gt_store_sku_date" in res_gt[0]:
+                    conn.execute(text("ALTER TABLE ground_truth_labels RENAME TO ground_truth_labels_legacy_uq;"))
+                    conn.execute(text("""
+                        CREATE TABLE ground_truth_labels (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            dataset_id VARCHAR(64),
+                            store_id VARCHAR(32) NOT NULL,
+                            sku_id VARCHAR(32) NOT NULL,
+                            date VARCHAR(10) NOT NULL,
+                            is_phantom_stockout BOOLEAN NOT NULL DEFAULT 0,
+                            label_type VARCHAR(32) DEFAULT 'phantom_stockout',
+                            source VARCHAR(64) DEFAULT 'official_hidden_set',
+                            CONSTRAINT uq_gt_dataset_store_sku_date UNIQUE (dataset_id, store_id, sku_id, date)
+                        );
+                    """))
+                    conn.execute(text("""
+                        INSERT OR IGNORE INTO ground_truth_labels (id, dataset_id, store_id, sku_id, date, is_phantom_stockout, label_type, source)
+                        SELECT id, dataset_id, store_id, sku_id, date, is_phantom_stockout, label_type, source FROM ground_truth_labels_legacy_uq;
+                    """))
+                    conn.execute(text("DROP TABLE ground_truth_labels_legacy_uq;"))
+                    conn.commit()
+            except Exception:
+                pass
+
             tables_to_check = [
                 "stores",
                 "skus",

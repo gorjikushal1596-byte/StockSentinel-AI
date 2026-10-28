@@ -364,6 +364,10 @@ class DatasetService:
         # Commit master records first to satisfy foreign keys
         self.db.commit()
 
+        # Clean existing daily records for this dataset if re-importing
+        self.db.query(DailyRecord).filter(DailyRecord.dataset_id == dataset_id).delete()
+        self.db.commit()
+
         # Chunked batch insert for daily_records (batch size 1500)
         batch_size = 1500
         for i in range(0, len(daily_records_to_insert), batch_size):
@@ -371,10 +375,22 @@ class DatasetService:
             self.db.bulk_save_objects(chunk)
             self.db.commit()
 
-        # Batch insert labels if any
+        # Batch insert labels if any (deduplicated by dataset, store, sku, date)
         if labels_to_insert:
-            for i in range(0, len(labels_to_insert), batch_size):
-                chunk = labels_to_insert[i:i + batch_size]
+            seen_label_keys: set[tuple[str, str, str, str]] = set()
+            unique_labels: list[GroundTruthLabel] = []
+            for lbl in labels_to_insert:
+                lkey = (str(lbl.dataset_id), str(lbl.store_id), str(lbl.sku_id), str(lbl.date))
+                if lkey not in seen_label_keys:
+                    seen_label_keys.add(lkey)
+                    unique_labels.append(lbl)
+
+            # Clear existing labels for this dataset if re-importing
+            self.db.query(GroundTruthLabel).filter(GroundTruthLabel.dataset_id == dataset_id).delete()
+            self.db.commit()
+
+            for i in range(0, len(unique_labels), batch_size):
+                chunk = unique_labels[i:i + batch_size]
                 self.db.bulk_save_objects(chunk)
                 self.db.commit()
 

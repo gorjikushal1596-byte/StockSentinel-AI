@@ -135,6 +135,7 @@ class GroundTruthLabel(Base):
     __table_args__ = (
         Index("idx_gt_store_date", "store_id", "date"),
         Index("idx_gt_dataset_store_date", "dataset_id", "store_id", "date"),
+        UniqueConstraint("dataset_id", "store_id", "sku_id", "date", name="uq_gt_dataset_store_sku_date"),
     )
 
 
