@@ -1,8 +1,8 @@
 # StockSentinel AI — Project Status
 
-> **Snapshot date:** 2026-10-25 22:35 IST  
+> **Snapshot date:** 2026-10-28 11:55 IST  
 > **Branch:** `feature/cinematic-website-rebuild`  
-> **Latest commit:** `54b708c` — *fix(ui): clear sticky navbar overlap on Top-20 product detail panel and modals*  
+> **Latest commit:** `e82eb10` — *feat(perf): code-split Three.js spatial canvases, lazy-load modals, and resolve backend UTC datetime deprecations*  
 
 ---
 
@@ -12,7 +12,7 @@
 |---|---|
 | Branch | `feature/cinematic-website-rebuild` |
 | Base branch | `main` |
-| Staged changes | **None** (clean working tree after status update) |
+| Staged changes | **None** (clean working tree) |
 | Unstaged changes | **None** |
 | Untracked files | **None** |
 | Remote | `origin` → GitHub `gorjikushal1596-byte/StockSentinel-AI` (no push performed) |
@@ -20,6 +20,8 @@
 ### Recent Commit History (latest first)
 
 ```
+e82eb10  feat(perf): code-split Three.js spatial canvases, lazy-load modals, and resolve backend UTC datetime deprecations
+f510210  docs: update PROJECT_STATUS.md snapshot with Top-20 detail drawer fix and resume guide
 54b708c  fix(ui): clear sticky navbar overlap on Top-20 product detail panel and modals
 d5a5f14  fix(tests): migrate frontend test suite from node:test to Vitest
 bd79d58  docs: add PROJECT_STATUS.md pause-point snapshot
@@ -32,54 +34,49 @@ fc2a3db  Initial commit: StockSentinel AI full-stack application
 
 ## Verified Build & Test Results
 
-All test suites and production builds were verified clean immediately prior to this pause snapshot:
+All test suites and production builds verified clean immediately prior to this snapshot:
 
 ### 1. Frontend Tests (`npm test` / `npx vitest run`)
-- **Status:** ✅ 13 passed, 0 failed across all 3 test files (executed in 275 ms)
+- **Status:** ✅ 13 passed, 0 failed across all 3 test files (executed in 207 ms)
 - **Files Verified:**
   - `tests/businessImpact.test.ts` — ✅ 5 tests pass
   - `tests/scannerEngine.test.ts` — ✅ 3 tests pass
   - `tests/statusAndVerification.test.ts` — ✅ 5 tests pass
 
 ### 2. Frontend Production Build (`npm run build`)
-- **Status:** ✅ SUCCESS (built in 803 ms)
-- **Artifacts:** `dist/index.html` (1.21 kB), `dist/assets/index-CSYZ3U9D.css` (10.96 kB), `dist/assets/index-CtHBxrNh.js` (1,535 kB)
-- **Note:** Chunk size warning (>500 kB) remains due to bundled Three.js libraries; code-splitting scheduled for separate optimization phase.
+- **Status:** ✅ SUCCESS with 0 warnings (built in 447 ms)
+- **Artifacts & Chunk Breakdown:**
+  - `dist/assets/index-FVKj1WYh.js` (312.83 kB │ gzip: 61.43 kB) — **dropped from 1,535 kB!**
+  - `dist/assets/vendor-three-DihB_Fa2.js` (907.17 kB │ gzip: 240.30 kB) — isolated vendor chunk
+  - `dist/assets/vendor-react-BcY9Rbab.js` (214.06 kB │ gzip: 66.86 kB)
+  - `dist/assets/vendor-lucide-Ib-T-Zw3.js` (27.64 kB │ gzip: 9.73 kB)
+  - Dynamic 3D canvas chunks: `WarehouseScene` (16.2 kB), `ShelfComparison3D` (6.2 kB), `Sentinel3DEmblemCanvas` (3.1 kB)
+  - Dynamic on-demand modal chunks: `DatasetManagerModal` (30.4 kB), `InteractiveSimulationModal` (12.7 kB), `DashboardPreviewModal` (9.8 kB)
 
 ### 3. Backend Tests (`pytest backend/tests -v`)
-- **Status:** ✅ 32 passed, 0 failed (executed in 7.84 s)
-- **Deprecation Note:** 81 cosmetic `datetime.utcnow()` warnings from SQLAlchemy/FastAPI models (scheduled for clean update).
+- **Status:** ✅ 32 passed, 0 failed (executed in 4.66 s)
+- **Warnings:** ✅ **0 warnings** (all 81 `datetime.utcnow()` deprecation warnings resolved using timezone-aware UTC datetime)
 
 ---
 
 ## Completed Work (Latest Session)
 
-### 1. Vitest Test Migration (Commit `d5a5f14`)
-- Converted all frontend unit tests from `node:test` and `node:assert/strict` to native Vitest `test` and `expect`.
-- Added `vitest` devDependency and configured `"test": "vitest run"` in `package.json`.
+### 1. Dynamic Import Code-Splitting & Three.js Chunk Isolation (Commit `e82eb10`)
+- **Vite Manual Chunking:** Configured Rollup `manualChunks` in `vite.config.ts` separating `vendor-three`, `vendor-react`, and `vendor-lucide`.
+- **Three.js Lazy Loading:**
+  - `WarehouseScene` dynamically loaded with `React.lazy()` and `Suspense` in `src/features/hero/HeroSection.tsx`.
+  - `ShelfComparison3D` dynamically loaded with `React.lazy()` and `Suspense` in `src/features/problem/PhantomProblemSection.tsx`.
+  - Created `Sentinel3DEmblemCanvas.tsx` to isolate `@react-three/fiber` canvas and lazy-load it with `Suspense` in `src/features/cta/FinalCtaSection.tsx`.
+- **On-Demand Modal Code-Splitting:**
+  - `InteractiveSimulationModal`, `DashboardPreviewModal`, and `DatasetManagerModal` converted to dynamic lazy imports with conditional mounting in `src/app/App.tsx`.
+- **Result:** Main client JS payload slashed by **~80%** (from 1,535 kB to 312 kB).
 
-### 2. Top-20 Queue Detail Panel Sticky Navigation Overlap Fix (Commit `54b708c`)
-- **Root Cause Identified:** 
-  1. `.detail-drawer-backdrop` had `position: fixed; inset: 0; padding: 16px;`, placing the drawer top at `y = 16px`, physically behind the 72px sticky navbar.
-  2. The parent `.dashboard-section-viewport` had `position: relative; z-index: 10;`, creating an isolated stacking context that trapped `.detail-drawer-backdrop` (`z-index: 100`) behind `.navbar-container` (`z-index: 50`).
-  3. When switching between products, the nested scroll container (`.modal-body`) retained previous scroll offsets.
-- **Fixes Applied:**
-  - Added `--navbar-height: 72px;` token in `src/index.css` and `src/styles/index.css`.
-  - Set `.detail-drawer-backdrop` to `top: var(--navbar-height, 72px); height: calc(100vh - var(--navbar-height, 72px)); bottom: 0; left: 0; right: 0;` ensuring it starts strictly below the navbar.
-  - Constrained desktop `.detail-drawer` to `max-height: calc(100vh - var(--navbar-height, 72px) - 32px);` with `scroll-margin-top: 80px`.
-  - Added `scroll-padding-top: 16px` to `.detail-drawer .modal-body`.
-  - Constrained mobile `@media (max-width: 768px)` `.detail-drawer` to `max-height: calc(100vh - var(--navbar-height, 72px) - 16px);`.
-  - Removed `z-index: 10` from `.dashboard-section-viewport` to prevent trapping fixed-position modals in a low stacking context.
-  - Added `key={selectedItemForDetail.id}` to `.detail-drawer` to remount the drawer on product selection, smoothly triggering entrance animations and resetting nested scroll position to top.
-  - Updated Evaluation and History modal dialog backdrops (`.modal-backdrop`) with the same navbar top offset.
-
-### 3. Hero Metrics Strip Visual Enhancement
-- Added a live telemetry header bar with an active pulsing status dot (`LIVE TELEMETRY STREAM // FASTAPI PORT 8000`).
-- Added subtle cyan card hover glow and -2px elevation transform.
-- Wired live backend metrics for SKUs, Stores, Historical Sales, and Database Anomalies.
-
-### 4. Global Footer Navigation Parity
-- Added `#team` (`Architecture & Team`) to `FinalCtaSection.tsx` footer links to ensure 100% parity with the global Navbar.
+### 2. Backend UTC Datetime Modernization (Commit `e82eb10`)
+- Replaced all deprecated `datetime.utcnow()` references with timezone-aware `datetime.now(timezone.utc)` and `utc_now` helper across:
+  - `backend/app/db/models.py` (columns: `Dataset.created_at`, `DatasetFile.created_at`, `Scan.created_at`, `Finding.created_at`, `BusinessImpactReport.created_at`, `BusinessImpactReport.updated_at`)
+  - `backend/app/db/repository.py` (`create_scan`)
+  - `backend/app/services/dataset_service.py` (`create_dataset_from_upload`, `create_synthetic_test_dataset`, and import completion)
+- Pytest suite runs with **zero warnings** on Python 3.14.
 
 ---
 
@@ -88,36 +85,23 @@ All test suites and production builds were verified clean immediately prior to t
 | # | Section | Status | Key Features |
 |---|---------|--------|--------------|
 | 1 | **Navbar** | ✅ Complete | Glassmorphism, live FastAPI/radar status, active section tracking, mobile hamburger |
-| 2 | **Hero Section** | ✅ Complete | Video background + fallback, 3D Warehouse toggle, reticle, floating telemetry panels, Top20QueuePreviewPanel |
+| 2 | **Hero Section** | ✅ Complete | Video background + fallback, lazy 3D Warehouse toggle, reticle, floating telemetry panels, Top20QueuePreviewPanel |
 | 3 | **Hero Metrics Strip** | ✅ Complete | Real-time FastAPI :8000 telemetry badge, pulse dot, card hover glow, responsive 5-column layout |
-| 4 | **The Phantom Problem** | ✅ Complete | 3D shelf discrepancy, dilemma contrast, collapsible root causes accordion |
+| 4 | **The Phantom Problem** | ✅ Complete | Lazy 3D shelf discrepancy, dilemma contrast, collapsible root causes accordion |
 | 5 | **How It Works (Pipeline)** | ✅ Complete | 5-stage interactive stepper, zero-hardware guarantee, telemetry pills |
 | 6 | **Feature Explorer** | ✅ Complete | 6 deep-dive capabilities with interactive mini-visualizations |
 | 7 | **Live Detection Demo** | ✅ Complete | Client simulation presets (critical, slow-mover, genuine-oos) + real backend scan execution |
 | 8 | **Dashboard (Top-20)** | ✅ Complete | Fixed detail drawer below navbar, live FastAPI persistence, evidence drawer, evaluation modal |
 | 9 | **Business Impact** | ✅ Complete | Empirical ROI model, bounded recovery calculation, INR/USD toggle, assumption persistence |
 | 10 | **Team Section (Frame 8)** | ✅ Complete | Kushal Gorji (Lead Architect) + 4 operational pillar cards with glassmorphism styling |
-| 11 | **Final CTA & Footer** | ✅ Complete | 3D emblem canvas, synchronized 7-link navigation footer |
+| 11 | **Final CTA & Footer** | ✅ Complete | Lazy 3D emblem canvas, synchronized 7-link navigation footer |
 
 ---
 
-## Remaining Issues & Unfinished Tasks
+## Remaining Tasks
 
-1. **Bundle Optimization & Code Splitting:**
-   - The main client JS chunk is `1,535 kB` (exceeds 500 kB soft limit).
-   - Solution: Use `React.lazy()` / dynamic `import()` for Three.js components (`WarehouseScene`, `ShelfComparison3D`, `Sentinel3DEmblem`) and larger modal views (`DatasetManagerModal`).
-2. **Backend Datetime Deprecation Cleanup:**
-   - Replace 81 instances of `datetime.utcnow()` with `datetime.now(datetime.UTC)` in backend models, schemas, and services (`backend/app/db/repository.py`, `backend/app/services/dataset_service.py`).
-3. **End-to-End Visual QA:**
-   - Perform full manual visual inspection across desktop and mobile screens at `http://localhost:5174/`.
-
----
-
-## Recommended Next Task
-
-When resuming work:
-1. **Dynamic Import Code-Splitting:** Split Three.js spatial components (`@react-three/fiber`, `@react-three/drei`, `three`) using `React.lazy()` and `Suspense` so the initial bundle drops below the 500 kB warning threshold.
-2. **Backend UTC Datetime Update:** Update `datetime.utcnow()` in backend service and model files, then verify with `pytest backend/tests -v`.
+1. **End-to-End Visual QA:**
+   - Run manual or browser visual check across desktop and mobile screens at `http://localhost:5174/` to verify layout and animations.
 
 ---
 
