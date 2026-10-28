@@ -69,6 +69,17 @@ export interface EvidenceResponse {
   ranking_formula: string;
 }
 
+export interface ReasoningPlanResponse {
+  finding_id: string;
+  source: 'omniroute_live' | 'deterministic_fallback';
+  model: string;
+  root_cause_diagnosis: string;
+  confidence_rationale: string;
+  associate_checklist: string[];
+  shrinkage_risk_level: string;
+  estimated_recovery_action: string;
+}
+
 export interface ScanResponse {
   scan_id: string;
   dataset_id?: string | null;
@@ -481,6 +492,24 @@ export const stockSentinelApi = {
       return null;
     } catch (err) {
       console.warn('Backend getEvidence unavailable:', err);
+      return null;
+    }
+  },
+
+  /**
+   * Fetch deep AI root-cause reasoning & associate action plan (gpt-oss-120b via OmniRoute)
+   */
+  async getFindingReasoning(findingId: string): Promise<ReasoningPlanResponse | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/findings/${encodeURIComponent(findingId)}/deep-reasoning`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      return null;
+    } catch (err) {
+      console.warn('Backend getFindingReasoning unavailable:', err);
       return null;
     }
   },

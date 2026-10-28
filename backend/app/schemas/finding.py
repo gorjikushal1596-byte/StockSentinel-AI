@@ -66,3 +66,15 @@ class EvidenceResponse(BaseModel):
     time_series: list[TimeSeriesPoint]
     detection_algorithm: str = "Poisson-Bayes Velocity Collapse Engine v1.2"
     ranking_formula: str = "Rank = Unit_Price * Historical_Daily_Velocity * Confidence"
+
+
+class ReasoningPlanResponse(BaseModel):
+    finding_id: str
+    source: Literal["omniroute_live", "deterministic_fallback"]
+    model: str
+    root_cause_diagnosis: str
+    confidence_rationale: str
+    associate_checklist: list[str] = []
+    shrinkage_risk_level: str
+    estimated_recovery_action: str
+    model_config = ConfigDict(from_attributes=True)

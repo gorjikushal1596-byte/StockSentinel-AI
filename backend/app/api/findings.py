@@ -10,6 +10,7 @@ from app.schemas.finding import (
     FindingStatusUpdate,
     EvidenceResponse,
     EvidenceSignal,
+    ReasoningPlanResponse,
 )
 from app.schemas.inventory import TimeSeriesPoint
 
@@ -162,3 +163,25 @@ def get_finding_evidence(finding_id: str, db: Session = Depends(get_db)):
         signals=signals,
         time_series=ts_points,
     )
+
+
+@router.post("/{finding_id}/deep-reasoning", response_model=ReasoningPlanResponse)
+async def generate_finding_reasoning(finding_id: str, db: Session = Depends(get_db)):
+    """
+    Generate deep qualitative root-cause reasoning and associate dispatch action plan
+    via OmniRoute (gpt-oss-120b) with zero-crash deterministic fallback.
+    """
+    from app.services.reasoning_service import OmniRouteReasoningService
+
+    repo = StockSentinelRepository(db)
+    finding = repo.get_finding(finding_id)
+    if not finding:
+        raise HTTPException(status_code=404, detail=f"Finding '{finding_id}' not found.")
+
+    service = OmniRouteReasoningService()
+    plan = await service.generate_action_plan(
+        finding=finding,
+        store=finding.store,
+        sku=finding.sku,
+    )
+    return ReasoningPlanResponse(**plan)

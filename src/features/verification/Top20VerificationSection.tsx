@@ -27,6 +27,7 @@ import {
   type EvidenceResponse,
   type DatasetItem,
   type EvaluationResponse,
+  type ReasoningPlanResponse,
 } from '@/services/apiClient';
 import {
   mapFindingToVerificationItem,
@@ -55,6 +56,8 @@ export const Top20VerificationSection: React.FC<{
   const [backendOnline, setBackendOnline] = useState<boolean>(false);
   const [evidenceData, setEvidenceData] = useState<EvidenceResponse | null>(null);
   const [isLoadingEvidence, setIsLoadingEvidence] = useState<boolean>(false);
+  const [reasoningPlan, setReasoningPlan] = useState<ReasoningPlanResponse | null>(null);
+  const [isLoadingReasoning, setIsLoadingReasoning] = useState<boolean>(false);
   const [isScanningBackend, setIsScanningBackend] = useState<boolean>(false);
   const [backendStatusMsg, setBackendStatusMsg] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -310,10 +313,11 @@ export const Top20VerificationSection: React.FC<{
     }
   }, [datasetId, backendOnline]);
 
-  // Fetch telemetry evidence when an item is selected for detail
+  // Fetch telemetry evidence and OmniRoute reasoning when an item is selected for detail
   useEffect(() => {
     if (!selectedItemForDetail) {
       setEvidenceData(null);
+      setReasoningPlan(null);
       return;
     }
     const currentItemId = selectedItemForDetail.id;
@@ -321,16 +325,22 @@ export const Top20VerificationSection: React.FC<{
     async function fetchDetailEvidence() {
       if (!backendOnline || !isBackendFinding(currentItemId)) return;
       setIsLoadingEvidence(true);
+      setIsLoadingReasoning(true);
       try {
-        const ev = await apiClient.getEvidence(currentItemId);
+        const [ev, plan] = await Promise.all([
+          apiClient.getEvidence(currentItemId),
+          apiClient.getFindingReasoning(currentItemId),
+        ]);
         if (isMounted) {
           setEvidenceData(ev);
+          setReasoningPlan(plan);
         }
       } catch (err) {
-        console.warn('Could not fetch evidence:', err);
+        console.warn('Could not fetch detail telemetry/reasoning:', err);
       } finally {
         if (isMounted) {
           setIsLoadingEvidence(false);
+          setIsLoadingReasoning(false);
         }
       }
     }
@@ -959,19 +969,64 @@ export const Top20VerificationSection: React.FC<{
                 </div>
               </div>
 
-              {/* Associate Guidance Directive */}
+              {/* Associate Guidance Directive / AI Reasoning Directive */}
               <div className="associate-guidance-card">
-                <div className="guidance-title">
-                  <ShieldCheck size={16} className="text-cyan-primary" />
-                  <span>Floor Inspection Checklist</span>
+                <div className="guidance-title flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-cyan-primary" />
+                    <span className="font-semibold">
+                      {reasoningPlan?.source === 'omniroute_live'
+                        ? 'AI Root-Cause Reasoning & Action Plan'
+                        : 'Floor Inspection Checklist'}
+                    </span>
+                  </div>
+                  {reasoningPlan?.source === 'omniroute_live' && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/40 text-cyan-300">
+                      ⚡ GPT-OSS 120B // VIA OMNIROUTE
+                    </span>
+                  )}
                 </div>
-                <p className="guidance-desc">{selectedItemForDetail.plainReason}</p>
-                <ul className="guidance-checklist">
-                  <li>1. Inspect primary shelf facing at <strong>{selectedItemForDetail.aisle}</strong>.</li>
-                  <li>2. Check top risers and bottom stock bins for misplaced units.</li>
-                  <li>3. Verify barcode scanning readability on packaging.</li>
-                  <li>4. Check customer returns cart at front service desk.</li>
-                </ul>
+
+                {isLoadingReasoning ? (
+                  <div className="py-2 text-xs font-mono text-cyan-400 animate-pulse flex items-center gap-2">
+                    <Activity size={14} className="animate-spin" />
+                    <span>Synthesizing root-cause hypothesis with reasoning model...</span>
+                  </div>
+                ) : reasoningPlan ? (
+                  <>
+                    <p className="guidance-desc mb-2">
+                      <strong>Diagnosis:</strong> {reasoningPlan.root_cause_diagnosis}
+                    </p>
+                    <p className="text-xs text-slate-400 mb-2 font-mono">
+                      <strong>Signal Rationale:</strong> {reasoningPlan.confidence_rationale}
+                    </p>
+                    <div className="mt-2 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Associate Action Steps:
+                    </div>
+                    <ul className="guidance-checklist">
+                      {reasoningPlan.associate_checklist.map((step, idx) => (
+                        <li key={idx}>
+                          {idx + 1}. {step}
+                        </li>
+                      ))}
+                    </ul>
+                    {reasoningPlan.estimated_recovery_action && (
+                      <div className="mt-2 text-xs p-2 rounded bg-cyan-950/40 border border-cyan-800/50 text-cyan-200">
+                        <strong>Recommended Protocol:</strong> {reasoningPlan.estimated_recovery_action}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="guidance-desc">{selectedItemForDetail.plainReason}</p>
+                    <ul className="guidance-checklist">
+                      <li>1. Inspect primary shelf facing at <strong>{selectedItemForDetail.aisle}</strong>.</li>
+                      <li>2. Check top risers and bottom stock bins for misplaced units.</li>
+                      <li>3. Verify barcode scanning readability on packaging.</li>
+                      <li>4. Check customer returns cart at front service desk.</li>
+                    </ul>
+                  </>
+                )}
               </div>
 
               {/* Telemetry Evidence & Time Series (Mandatory R1 Requirement) */}

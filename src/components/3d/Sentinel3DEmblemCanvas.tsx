@@ -17,3 +17,4 @@ export const Sentinel3DEmblemCanvas: React.FC = () => {
 };
 
 export default Sentinel3DEmblemCanvas;
+
