@@ -357,11 +357,12 @@ export interface ImportResult {
 
 export const stockSentinelApi = {
   /**
-   * Health check for backend connectivity
+   * Health check for backend connectivity, optionally scoped by active dataset.
    */
-  async checkHealth(): Promise<{ online: boolean; data?: HealthResponse }> {
+  async checkHealth(datasetId?: string): Promise<{ online: boolean; data?: HealthResponse }> {
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/health`, {}, 2000);
+      const query = datasetId ? `?dataset_id=${encodeURIComponent(datasetId)}` : '';
+      const res = await fetchWithTimeout(`${API_BASE}/health${query}`, {}, 2000);
       if (res.ok) {
         const data = await res.json();
         return { online: true, data };

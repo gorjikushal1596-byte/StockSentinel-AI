@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Layers, Store, History, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 
-export const HeroMetrics: React.FC = () => {
+interface HeroMetricsProps {
+  datasetId?: string;
+}
+
+export const HeroMetrics: React.FC<HeroMetricsProps> = ({ datasetId }) => {
   const [stats, setStats] = useState<{
     stores_count: number;
     skus_count: number;
@@ -13,7 +17,7 @@ export const HeroMetrics: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    apiClient.checkHealth().then((health) => {
+    apiClient.checkHealth(datasetId).then((health) => {
       if (!mounted) return;
       if (health.online && health.data?.telemetry_stats) {
         setIsOnline(true);
@@ -27,7 +31,7 @@ export const HeroMetrics: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [datasetId]);
 
   const metrics = [
     {

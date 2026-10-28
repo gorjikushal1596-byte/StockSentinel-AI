@@ -64,7 +64,7 @@ export const ProcessPipelineSection: React.FC<ProcessPipelineSectionProps> = ({
       icon: <Filter size={20} />,
       summary: 'Ranks anomalies by operational priority and estimated sales exposure.',
       details: [
-        'Weights anomalies by retail price ($) × expected daily velocity to isolate highest-cost leaks.',
+        'Weights anomalies by retail unit price (₹) × expected daily velocity to isolate highest-cost leaks.',
         'Calculates planogram shelf density factor and cross-store correlation to identify batch delivery errors.',
         'Filters out false positives caused by supplier stockouts or region-wide logistics delays.',
         'Assigns severity classification: Critical Hazard, High Risk, or Routine Verification.',

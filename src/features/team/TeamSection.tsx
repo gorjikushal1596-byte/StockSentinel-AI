@@ -45,7 +45,7 @@ export const TeamSection: React.FC = () => {
       contributions: [
         'Architected REST API routes for /scans, /findings, /evaluation, /datasets, and /recovery-estimate',
         'Built persistent store verification state surviving browser reloads and rescan updates',
-        'Developed end-to-end automated test suite across 32 backend pytest specs and Vitest suites',
+        'Developed end-to-end automated test suite across 34 backend pytest specs and Vitest suites',
       ],
       tag: 'BACKEND ARCHITECTURE',
     },

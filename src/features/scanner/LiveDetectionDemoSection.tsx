@@ -336,7 +336,7 @@ export const LiveDetectionDemoSection: React.FC<{
               >
                 {Object.keys(skuLibrary).map((sku) => (
                   <option key={sku} value={sku}>
-                    {sku} — {skuLibrary[sku].name} (${skuLibrary[sku].price})
+                    {sku} — {skuLibrary[sku].name} (₹{skuLibrary[sku].price})
                   </option>
                 ))}
               </select>
@@ -570,13 +570,13 @@ export const LiveDetectionDemoSection: React.FC<{
                   <div>
                     <div className="sku-name-title">{currentSkuData.name}</div>
                     <div className="sku-details-sub">
-                      {selectedSku} • {currentSkuData.aisle} • MSRP: ${currentSkuData.price.toFixed(2)}
+                      {selectedSku} • {currentSkuData.aisle} • MSRP: ₹{currentSkuData.price.toFixed(2)}
                     </div>
                   </div>
                   <div className="sku-price-at-risk">
                     <span className="risk-dollars-label">Est. Weekly Revenue Loss:</span>
                     <span className="risk-dollars-val font-mono">
-                      ${((currentSkuData.price * historicalVelocity)).toFixed(0)}/wk
+                      ₹{((currentSkuData.price * historicalVelocity)).toFixed(0)}/wk
                     </span>
                   </div>
                 </div>

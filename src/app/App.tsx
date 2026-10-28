@@ -119,7 +119,7 @@ export const App: React.FC = () => {
         />
 
         {/* Hero Problem-Statement Metrics Strip */}
-        <HeroMetrics />
+        <HeroMetrics datasetId={activeDatasetId} />
 
         {/* FRAME 2: The Phantom Problem (Contradiction & 3D Shelf) */}
         <PhantomProblemSection
