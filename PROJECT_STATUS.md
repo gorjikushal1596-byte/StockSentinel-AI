@@ -1,8 +1,8 @@
 # StockSentinel AI — Project Status
 
-> **Snapshot date:** 2026-10-28 14:20 IST  
+> **Snapshot date:** 2026-10-28 14:25 IST  
 > **Branch:** `feature/cinematic-website-rebuild`  
-> **Latest commit:** `6ba3ef5` — *feat(ai): configure dotenv loading and live JSON parsing for OmniRoute gpt-oss-120b*  
+> **Latest commit:** `5828b7b` — *docs: record verified live OmniRoute gpt-oss-120b execution*  
 
 ---
 
@@ -20,7 +20,9 @@
 ### Recent Commit History (latest first)
 
 ```
+5828b7b  docs: record verified live OmniRoute gpt-oss-120b execution
 6ba3ef5  feat(ai): configure dotenv loading and live JSON parsing for OmniRoute gpt-oss-120b
+ef61522  docs: update PROJECT_STATUS.md with OmniRoute gpt-oss-120b integration and test results
 b7273f0  feat(ai): integrate OmniRoute gpt-oss-120b reasoning engine for associate action checklists
 e82eb10  feat(perf): code-split Three.js spatial canvases, lazy-load modals, and resolve backend UTC datetime deprecations
 f510210  docs: update PROJECT_STATUS.md snapshot with Top-20 detail drawer fix and resume guide
@@ -43,31 +45,31 @@ All test suites and production builds verified clean immediately prior to this s
 
 ### 2. Frontend Production Build (`npm run build`)
 - **Status:** ✅ SUCCESS with 0 warnings (built in 551 ms)
+- **Main Client Bundle:** 314 kB (down from 1,535 kB) with Three.js and on-demand modal code-splitting.
 
 ### 3. Backend Tests (`pytest backend/tests -v`)
 - **Status:** ✅ 34 passed, 0 failed, 0 warnings (executed in 4.22 s)
-- **New Tests:** `test_deep_reasoning_fallback_when_omniroute_disabled`, `test_reasoning_service_live_mock` passing.
+- **All 81 `datetime.utcnow()` deprecation warnings resolved.**
+- **Reasoning Tests:** 2/2 tests pass (`test_deep_reasoning_fallback_when_omniroute_disabled`, `test_reasoning_service_live_mock`).
 
 ---
 
 ## Completed Work (Latest Session)
 
 ### 1. Dynamic Import Code-Splitting & Three.js Chunk Isolation (Commit `e82eb10`)
-- **Vite Manual Chunking:** Configured Rollup `manualChunks` in `vite.config.ts` separating `vendor-three`, `vendor-react`, and `vendor-lucide`.
-- **Three.js Lazy Loading:**
-  - `WarehouseScene` dynamically loaded with `React.lazy()` and `Suspense` in `src/features/hero/HeroSection.tsx`.
-  - `ShelfComparison3D` dynamically loaded with `React.lazy()` and `Suspense` in `src/features/problem/PhantomProblemSection.tsx`.
-  - Created `Sentinel3DEmblemCanvas.tsx` to isolate `@react-three/fiber` canvas and lazy-load it with `Suspense` in `src/features/cta/FinalCtaSection.tsx`.
-- **On-Demand Modal Code-Splitting:**
-  - `InteractiveSimulationModal`, `DashboardPreviewModal`, and `DatasetManagerModal` converted to dynamic lazy imports with conditional mounting in `src/app/App.tsx`.
-- **Result:** Main client JS payload slashed by **~80%** (from 1,535 kB to 312 kB).
+- Slashed initial JavaScript bundle footprint from **1,535 kB** to **314 kB** (~80% payload reduction).
+- Isolated Three.js spatial canvases (`WarehouseScene`, `ShelfComparison3D`, `Sentinel3DEmblemCanvas`) with `React.lazy()` and `Suspense`.
+- Split large dialog views (`DatasetManagerModal`, `DashboardPreviewModal`, `InteractiveSimulationModal`) into on-demand dynamic chunks.
 
 ### 2. Backend UTC Datetime Modernization (Commit `e82eb10`)
-- Replaced all deprecated `datetime.utcnow()` references with timezone-aware `datetime.now(timezone.utc)` and `utc_now` helper across:
-  - `backend/app/db/models.py` (columns: `Dataset.created_at`, `DatasetFile.created_at`, `Scan.created_at`, `Finding.created_at`, `BusinessImpactReport.created_at`, `BusinessImpactReport.updated_at`)
-  - `backend/app/db/repository.py` (`create_scan`)
-  - `backend/app/services/dataset_service.py` (`create_dataset_from_upload`, `create_synthetic_test_dataset`, and import completion)
-- Pytest suite runs with **zero warnings** on Python 3.14.
+- Replaced all deprecated `datetime.utcnow()` instances with `datetime.now(timezone.utc)` and `utc_now` helper across `models.py`, `repository.py`, and `dataset_service.py`.
+- Verified zero deprecation warnings on Python 3.14.
+
+### 3. OmniRoute + `gpt-oss-120b` (Groq) Integration (Commits `b7273f0`, `6ba3ef5`, `5828b7b`)
+- Created `OmniRouteReasoningService` (`backend/app/services/reasoning_service.py`) querying OmniRoute's `/v1/chat/completions` endpoint for `groq/openai/gpt-oss-120b`.
+- Added `POST /api/findings/{finding_id}/deep-reasoning` endpoint with resilient deterministic fallback.
+- Added live AI Reasoning card with actionable 3-step associate inspection checklists in the Top-20 product detail drawer.
+- Verified live end-to-end execution streaming real reasoning from `gpt-oss-120b`.
 
 ---
 
