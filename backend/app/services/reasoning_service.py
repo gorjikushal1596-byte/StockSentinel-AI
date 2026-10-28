@@ -10,6 +10,10 @@ import json
 import logging
 from typing import Any
 import httpx
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from app.db.models import Finding, Store, SKU
 
 logger = logging.getLogger("stocksentinel.reasoning")
@@ -21,7 +25,7 @@ class OmniRouteReasoningService:
     def __init__(self):
         self.api_base = os.getenv("OMNIROUTE_API_BASE", "http://127.0.0.1:20128/v1").rstrip("/")
         self.api_key = os.getenv("OMNIROUTE_API_KEY", "")
-        self.model = os.getenv("OMNIROUTE_MODEL", "gpt-oss-120b")
+        self.model = os.getenv("OMNIROUTE_MODEL", "groq/openai/gpt-oss-120b")
         self.enabled = os.getenv("OMNIROUTE_ENABLED", "true").lower() in ("true", "1", "yes")
 
     async def generate_action_plan(
@@ -78,11 +82,11 @@ class OmniRouteReasoningService:
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.2,
-            "max_tokens": 350,
+            "max_tokens": 650,
         }
 
         try:
-            async with httpx.AsyncClient(timeout=4.0) as client:
+            async with httpx.AsyncClient(timeout=6.0) as client:
                 res = await client.post(
                     f"{self.api_base}/chat/completions",
                     headers=headers,
@@ -99,6 +103,12 @@ class OmniRouteReasoningService:
                         clean_content = clean_content[3:]
                     if clean_content.endswith("```"):
                         clean_content = clean_content[:-3]
+                    
+                    start_idx = clean_content.find("{")
+                    end_idx = clean_content.rfind("}")
+                    if start_idx != -1 and end_idx != -1:
+                        clean_content = clean_content[start_idx : end_idx + 1]
+
                     parsed = json.loads(clean_content.strip())
 
                     return {
@@ -154,3 +164,4 @@ class OmniRouteReasoningService:
             "shrinkage_risk_level": finding.severity,
             "estimated_recovery_action": action,
         }
+

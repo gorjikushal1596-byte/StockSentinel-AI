@@ -13,6 +13,11 @@ Provides REST endpoints for:
 import os
 import json
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+# Load local environment configuration (.env)
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import init_db, SessionLocal
