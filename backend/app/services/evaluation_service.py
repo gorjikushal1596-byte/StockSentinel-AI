@@ -29,7 +29,7 @@ class EvaluationService:
             return EvaluationResponse(
                 available=False,
                 evaluation_date=evaluation_date,
-                message="Ground-truth labels unavailable for this evaluation date. Add hidden labels to evaluate.",
+                message="Evaluation unavailable — ground-truth labels required",
                 mean_precision_at_20=None,
                 overall_recall=None,
             )

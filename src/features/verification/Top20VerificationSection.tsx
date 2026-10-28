@@ -814,7 +814,7 @@ export const Top20VerificationSection: React.FC<{
                         <div className="sku-cell">
                           <span className="sku-code font-mono">{item.sku}</span>
                           <span className="sku-name">{item.productName}</span>
-                          <span className="sku-price font-mono">${item.unitPrice.toFixed(2)}</span>
+                          <span className="sku-price font-mono">₹{item.unitPrice.toFixed(2)}</span>
                         </div>
                       </td>
 
@@ -1268,9 +1268,12 @@ export const Top20VerificationSection: React.FC<{
                       <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-3">
                         <Info size={24} className="text-amber-400" />
                       </div>
-                      <h4 className="text-base font-bold text-white mb-2">Ground Truth Labels Not Present</h4>
-                      <p className="text-xs text-slate-300 max-w-md mx-auto mb-4">
-                        {evaluationResult.message || `No evaluation ground-truth labels exist for date ${evaluationDate}. Benchmark metrics are withheld in compliance with non-fabrication policy.`}
+                      <h4 className="text-base font-bold text-amber-300 font-mono mb-2">Evaluation unavailable — ground-truth labels required</h4>
+                      <p className="text-xs text-slate-300 max-w-md mx-auto mb-2">
+                        {evaluationResult.message || `No evaluation ground-truth labels exist for date ${evaluationDate}. Benchmark metrics are withheld in strict compliance with non-fabrication policy.`}
+                      </p>
+                      <p className="text-[11px] text-slate-400 max-w-lg mx-auto mb-4 font-mono">
+                        Note: Ground-truth labels mark verified positive phantom stock-outs only (~3% held back). Unlabeled items cannot be automatically assumed to be confirmed negatives without verified physical audit records.
                       </p>
                       {(() => {
                         const parsedDates = (evaluationResult.message?.match(/\b\d{4}-\d{2}-\d{2}\b/g) || []).filter(d => d !== evaluationDate);
