@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -11,8 +11,9 @@ import {
   FileQuestion,
   RotateCcw,
 } from 'lucide-react';
-import { ShelfComparison3D } from '@/components/3d/ShelfComparison3D';
 import { SectionBackdrop } from '@/components/layout/SectionBackdrop';
+
+const ShelfComparison3D = lazy(() => import('@/components/3d/ShelfComparison3D'));
 
 interface PhantomProblemSectionProps {
   onContinueToNext: () => void;
@@ -82,10 +83,16 @@ export const PhantomProblemSection: React.FC<PhantomProblemSectionProps> = ({
         <div className="problem-grid">
           {/* Left Side: 3D Shelf Inspection View */}
           <div className="problem-left-col motion-fade-up motion-stagger-1">
-            <ShelfComparison3D
-              isAnomalySelected={selectedAnomaly}
-              onSelectAnomaly={() => setSelectedAnomaly(true)}
-            />
+            <Suspense fallback={
+              <div className="shelf-3d-wrapper flex items-center justify-center bg-slate-950/60 rounded-xl border border-slate-800">
+                <span className="font-mono text-xs text-cyan-400 animate-pulse">INITIALIZING 3D SPATIAL SHELF...</span>
+              </div>
+            }>
+              <ShelfComparison3D
+                isAnomalySelected={selectedAnomaly}
+                onSelectAnomaly={() => setSelectedAnomaly(true)}
+              />
+            </Suspense>
 
             {/* Interactive Discrepancy Selector Bar */}
             <div className={`discrepancy-card glass-panel ${selectedAnomaly ? 'anomaly-active-glow' : ''}`}>

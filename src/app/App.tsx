@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { HeroSection } from '@/features/hero/HeroSection';
 import { HeroMetrics } from '@/components/ui/HeroMetrics';
@@ -10,10 +10,17 @@ import { Top20VerificationSection } from '@/features/verification/Top20Verificat
 import { BusinessImpactSection } from '@/features/impact/BusinessImpactSection';
 import { TeamSection } from '@/features/team/TeamSection';
 import { FinalCtaSection } from '@/features/cta/FinalCtaSection';
-import { InteractiveSimulationModal } from '@/components/ui/InteractiveSimulationModal';
-import { DashboardPreviewModal } from '@/components/ui/DashboardPreviewModal';
-import { DatasetManagerModal } from '@/components/ui/DatasetManagerModal';
 import { scrollToSection } from '@/utils/scroll';
+
+const InteractiveSimulationModal = lazy(() =>
+  import('@/components/ui/InteractiveSimulationModal').then((m) => ({ default: m.InteractiveSimulationModal }))
+);
+const DashboardPreviewModal = lazy(() =>
+  import('@/components/ui/DashboardPreviewModal').then((m) => ({ default: m.DashboardPreviewModal }))
+);
+const DatasetManagerModal = lazy(() =>
+  import('@/components/ui/DatasetManagerModal').then((m) => ({ default: m.DatasetManagerModal }))
+);
 
 export const App: React.FC = () => {
   const [demoModalOpen, setDemoModalOpen] = useState(false);
@@ -170,25 +177,37 @@ export const App: React.FC = () => {
       </main>
 
       {/* Modals for Quick CTA Launches */}
-      <InteractiveSimulationModal
-        isOpen={demoModalOpen}
-        onClose={() => setDemoModalOpen(false)}
-      />
+      {demoModalOpen && (
+        <Suspense fallback={null}>
+          <InteractiveSimulationModal
+            isOpen={demoModalOpen}
+            onClose={() => setDemoModalOpen(false)}
+          />
+        </Suspense>
+      )}
 
-      <DashboardPreviewModal
-        isOpen={dashboardModalOpen}
-        onClose={() => setDashboardModalOpen(false)}
-      />
+      {dashboardModalOpen && (
+        <Suspense fallback={null}>
+          <DashboardPreviewModal
+            isOpen={dashboardModalOpen}
+            onClose={() => setDashboardModalOpen(false)}
+          />
+        </Suspense>
+      )}
 
-      <DatasetManagerModal
-        isOpen={datasetModalOpen}
-        onClose={() => setDatasetModalOpen(false)}
-        onDatasetImported={(dsId) => {
-          setActiveDatasetId(dsId);
-          setImpactRefreshTrigger((prev) => prev + 1);
-          scrollToSection('dashboard');
-        }}
-      />
+      {datasetModalOpen && (
+        <Suspense fallback={null}>
+          <DatasetManagerModal
+            isOpen={datasetModalOpen}
+            onClose={() => setDatasetModalOpen(false)}
+            onDatasetImported={(dsId) => {
+              setActiveDatasetId(dsId);
+              setImpactRefreshTrigger((prev) => prev + 1);
+              scrollToSection('dashboard');
+            }}
+          />
+        </Suspense>
+      )}
 
       <style>{`
         .stocksentinel-app {

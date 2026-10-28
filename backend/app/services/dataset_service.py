@@ -7,7 +7,7 @@ validation reporting, and transaction-safe chunked batch importing.
 import os
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from fastapi import UploadFile
@@ -57,7 +57,7 @@ class DatasetService:
         if not files:
             raise ValueError("No files provided for upload.")
 
-        dataset_id = f"DS_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+        dataset_id = f"DS_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
         upload_dir = get_dataset_storage_dir(dataset_id)
 
         daily_candidate = None
@@ -138,7 +138,7 @@ class DatasetService:
             detected_schema_json=json.dumps(profile.model_dump(), default=str),
             confirmed_mapping_json=json.dumps(inferred_mappings),
             validation_report_json=None,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
         self.db.add(dataset)
@@ -384,7 +384,7 @@ class DatasetService:
         max_date = max(dates) if dates else None
 
         dataset.status = "imported"
-        dataset.imported_at = datetime.utcnow()
+        dataset.imported_at = datetime.now(timezone.utc)
         dataset.row_count = len(clean_records)
         dataset.validation_report_json = json.dumps(report.model_dump(), default=str)
         self.db.commit()
@@ -423,7 +423,7 @@ class DatasetService:
         if not (data_dir / "daily_sales_inventory.csv").exists():
             raise FileNotFoundError("Synthetic test dataset files not found in data/ or downloads.")
 
-        dataset_id = f"DS_SYNTHETIC_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        dataset_id = f"DS_SYNTHETIC_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         upload_dir = get_dataset_storage_dir(dataset_id)
 
         target_files = [
@@ -485,7 +485,7 @@ class DatasetService:
             detected_schema_json=json.dumps(profile.model_dump(), default=str),
             confirmed_mapping_json=json.dumps(confirmed_mapping),
             validation_report_json=None,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
         self.db.add(dataset)

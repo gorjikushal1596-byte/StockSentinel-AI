@@ -257,3 +257,5 @@ export const ShelfComparison3D: React.FC<{
     </div>
   );
 };
+
+export default ShelfComparison3D;

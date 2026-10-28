@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models for StockSentinel AI."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column,
     String,
@@ -15,6 +15,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from app.db.database import Base
+
+
+def utc_now() -> datetime:
+    """Return timezone-aware UTC datetime."""
+    return datetime.now(timezone.utc)
 
 
 class Dataset(Base):
@@ -32,7 +37,7 @@ class Dataset(Base):
     detected_schema_json = Column(Text, nullable=True)  # detected column metadata & types
     confirmed_mapping_json = Column(Text, nullable=True)  # confirmed column semantic mappings
     validation_report_json = Column(Text, nullable=True)  # detailed validation stats & issues
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
     imported_at = Column(DateTime, nullable=True)
 
     files = relationship("DatasetFile", back_populates="dataset", cascade="all, delete-orphan")
@@ -51,7 +56,7 @@ class DatasetFile(Base):
     row_count = Column(Integer, default=0)
     columns_json = Column(Text, nullable=True)
     detected_role = Column(String(32), default="daily_records")  # daily_records, store_master, product_master, promo_calendar, ground_truth
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     dataset = relationship("Dataset", back_populates="files")
 
@@ -142,7 +147,7 @@ class Scan(Base):
     evaluation_date = Column(String(10), nullable=False, index=True)
     status = Column(String(32), default="completed")  # running, completed, failed
     threshold_days = Column(Integer, default=3)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
     total_evaluated = Column(Integer, default=0)
     flagged_count = Column(Integer, default=0)
     stores_covered = Column(Integer, default=0)
@@ -170,7 +175,7 @@ class Finding(Base):
     explanation = Column(Text, nullable=False)
     status = Column(String(32), default="pending")  # pending, verified, false_positive, unresolved
     time_series_json = Column(Text, nullable=False)  # JSON string of recent days [{day, stock, sales}]
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     scan = relationship("Scan", back_populates="findings")
     store = relationship("Store", back_populates="findings")
@@ -193,8 +198,8 @@ class BusinessImpactReport(Base):
     evaluation_date = Column(String(10), nullable=False, index=True)
     assumptions_json = Column(Text, nullable=False)
     metrics_json = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     __table_args__ = (
         Index("idx_bi_dataset_scan", "dataset_id", "scan_id"),

@@ -378,3 +378,5 @@ export const WarehouseScene: React.FC<WarehouseSceneProps> = ({
     </div>
   );
 };
+
+export default WarehouseScene;

@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { Activity, Eye, Zap, ShieldCheck, Play, Pause, Layers } from 'lucide-react';
-import { WarehouseScene } from '@/components/3d/WarehouseScene';
 import { FloatingInventoryPanel } from '@/components/ui/FloatingInventoryPanel';
 import { SalesStockChart } from '@/features/dashboard/SalesStockChart';
 import { DetectionAlertPanel } from '@/components/ui/DetectionAlertPanel';
 import { Top20QueuePreviewPanel } from '@/components/ui/Top20QueuePreviewPanel';
+
+const WarehouseScene = lazy(() => import('@/components/3d/WarehouseScene'));
 
 interface HeroSectionProps {
   onOpenDemo: () => void;
@@ -117,7 +118,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           THREE.JS 3D TELEMETRY & SCANNER OVERLAY
          ======================================================= */}
       <div className={`hero-3d-stage stage-fade-${stage >= 2 ? 'in' : 'out'}`}>
-        <WarehouseScene mode={sceneMode} />
+        <Suspense fallback={null}>
+          <WarehouseScene mode={sceneMode} />
+        </Suspense>
       </div>
 
       {/* Decorative ambient background flares */}

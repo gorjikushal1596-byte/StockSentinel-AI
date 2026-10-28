@@ -1,7 +1,7 @@
 """Data repository for querying and mutating StockSentinel database entities."""
 
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_, desc, func
 from app.db.models import Store, SKU, DailyRecord, GroundTruthLabel, Scan, Finding
@@ -139,7 +139,7 @@ class StockSentinelRepository:
             evaluation_date=evaluation_date,
             status="completed",
             threshold_days=threshold_days,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             total_evaluated=total_evaluated,
             flagged_count=flagged_count,
             stores_covered=stores_covered,
