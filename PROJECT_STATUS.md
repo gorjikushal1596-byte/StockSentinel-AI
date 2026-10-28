@@ -1,8 +1,8 @@
 # StockSentinel AI — Project Status
 
-> **Snapshot date:** 2026-10-28 18:40 IST  
+> **Snapshot date:** 2026-10-28 20:40 IST  
 > **Branch:** `feature/cinematic-website-rebuild`  
-> **Latest commit:** `aaedfca` — *feat(telemetry): scope hero metrics to active dataset, align INR currency symbols, and sync test counts*  
+> **Latest commit:** `8c79272` — *refactor(ui): streamline upload modal into pure custom file dropzone and move benchmark restore to footer*  
 
 ---
 
@@ -20,6 +20,10 @@
 ### Recent Commit History (latest first)
 
 ```
+8c79272  refactor(ui): streamline upload modal into pure custom file dropzone and move benchmark restore to footer
+a6eabca  fix(sync): synchronize scanId and evalDate from Top-20 status updates directly to Business Impact ROI
+7c23dab  fix(db): scope ground_truth_labels unique constraint to dataset_id and deduplicate imports
+d3f7559  feat(datasets): isolate test DB, purge duplicate datasets, and create 5 isolated test case CSVs
 aaedfca  feat(telemetry): scope hero metrics to active dataset, align INR currency symbols, and sync test counts
 6c58dfb  feat(audit): sync evaluation fallback text, INR currency formatting, and requirements matrix
 5828b7b  docs: record verified live OmniRoute gpt-oss-120b execution
