@@ -1,8 +1,8 @@
 # StockSentinel AI — Project Status
 
-> **Snapshot date:** 2026-10-28 14:12 IST  
+> **Snapshot date:** 2026-10-28 14:20 IST  
 > **Branch:** `feature/cinematic-website-rebuild`  
-> **Latest commit:** `b7273f0` — *feat(ai): integrate OmniRoute gpt-oss-120b reasoning engine for associate action checklists*  
+> **Latest commit:** `6ba3ef5` — *feat(ai): configure dotenv loading and live JSON parsing for OmniRoute gpt-oss-120b*  
 
 ---
 
@@ -20,6 +20,7 @@
 ### Recent Commit History (latest first)
 
 ```
+6ba3ef5  feat(ai): configure dotenv loading and live JSON parsing for OmniRoute gpt-oss-120b
 b7273f0  feat(ai): integrate OmniRoute gpt-oss-120b reasoning engine for associate action checklists
 e82eb10  feat(perf): code-split Three.js spatial canvases, lazy-load modals, and resolve backend UTC datetime deprecations
 f510210  docs: update PROJECT_STATUS.md snapshot with Top-20 detail drawer fix and resume guide
