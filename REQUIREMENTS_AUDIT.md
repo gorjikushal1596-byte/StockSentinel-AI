@@ -47,3 +47,4 @@
   - Verify detail drawer layout, sticky navbar clearance, and z-index across mobile, tablet, and desktop viewports.
 - **Phase 5: Full Regression Test & Project Status Documentation**
   - Run frontend test suite, frontend build, backend pytest suite, and benchmark runner.
+
