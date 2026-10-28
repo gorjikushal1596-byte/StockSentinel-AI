@@ -125,9 +125,9 @@ export const BusinessImpactSection: React.FC<BusinessImpactSectionProps> = ({
         const scanList = await apiClient.listScans(selectedDatasetId);
         if (!isMounted) return;
         setScans(scanList);
-        if (scanList.length > 0 && !selectedScanId) {
+        if (scanList.length > 0 && !selectedScanId && !propScanId) {
           setSelectedScanId(scanList[0].scan_id);
-          if (scanList[0].evaluation_date) {
+          if (scanList[0].evaluation_date && !propEvaluationDate) {
             setEvaluationDate(scanList[0].evaluation_date);
           }
         }
@@ -139,17 +139,21 @@ export const BusinessImpactSection: React.FC<BusinessImpactSectionProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [selectedDatasetId]);
+  }, [selectedDatasetId, propScanId, propEvaluationDate]);
 
   // Main fetch function for business impact figures
   const fetchImpactReport = useCallback(async () => {
     setIsLoading(true);
     setErrorMsg(null);
+    const activeScan = propScanId || selectedScanId || undefined;
+    const activeDate = propEvaluationDate || evaluationDate;
+    const activeDs = propDatasetId || selectedDatasetId || undefined;
+
     try {
       const res = await apiClient.getRecoveryEstimate({
-        dataset_id: selectedDatasetId || undefined,
-        scan_id: selectedScanId || undefined,
-        evaluation_date: evaluationDate,
+        dataset_id: activeDs,
+        scan_id: activeScan,
+        evaluation_date: activeDate,
         days_saved_per_incident: daysSaved,
         recovery_capture_rate: captureRate,
         unverified_conversion_rate: unverifiedConversionRate,
@@ -179,8 +183,11 @@ export const BusinessImpactSection: React.FC<BusinessImpactSectionProps> = ({
       setIsLoading(false);
     }
   }, [
+    propDatasetId,
     selectedDatasetId,
+    propScanId,
     selectedScanId,
+    propEvaluationDate,
     evaluationDate,
     daysSaved,
     captureRate,

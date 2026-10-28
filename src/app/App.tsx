@@ -152,7 +152,10 @@ export const App: React.FC = () => {
             if (evalDate) setActiveEvaluationDate(evalDate);
             setImpactRefreshTrigger((prev) => prev + 1);
           }}
-          onFindingStatusChanged={() => {
+          onFindingStatusChanged={(scanId, datasetId, evalDate) => {
+            if (scanId) setActiveScanId(scanId);
+            if (datasetId) setActiveDatasetId(datasetId);
+            if (evalDate) setActiveEvaluationDate(evalDate);
             setImpactRefreshTrigger((prev) => prev + 1);
           }}
         />

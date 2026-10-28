@@ -42,7 +42,7 @@ export const Top20VerificationSection: React.FC<{
   onLaunchScanner: () => void;
   onOpenDataset?: () => void;
   onScanExecuted?: (scanId: string, datasetId: string, evaluationDate: string) => void;
-  onFindingStatusChanged?: () => void;
+  onFindingStatusChanged?: (scanId?: string, datasetId?: string, evaluationDate?: string) => void;
   datasetId?: string;
 }> = ({
   onLaunchScanner,
@@ -443,7 +443,7 @@ export const Top20VerificationSection: React.FC<{
       setTimeout(() => {
         setRecentlyUpdatedId((curr) => (curr === id ? null : curr));
       }, 1200);
-      onFindingStatusChanged?.();
+      onFindingStatusChanged?.(updated.scan_id, selectedDatasetId, updated.evaluation_date);
     } catch (err: any) {
       console.error('Finding status update error:', err);
       setStatusUpdateError({
