@@ -38,6 +38,23 @@ def run_evaluation(evaluation_date: str, output_format: str = "summary", dataset
         # 1. Fetch hidden ground truth labels (completely held back from detector)
         gt_labels = repo.get_ground_truth_for_date(evaluation_date, dataset_id=dataset_id)
         if not gt_labels:
+            available = repo.get_available_ground_truth_dates(dataset_id=dataset_id)
+            if not available and not repo.get_all_stores(dataset_id=dataset_id):
+                print("[*] Database is empty. Loading canonical benchmark dataset...")
+                try:
+                    from app.services.dataset_service import DatasetService
+                    svc = DatasetService(db)
+                    svc.load_synthetic_dataset()
+                    gt_labels = repo.get_ground_truth_for_date(evaluation_date, dataset_id=dataset_id)
+                except Exception as seed_err:
+                    print(f"[*] Synthetic loader note ({seed_err}). Running generator seed...")
+                    try:
+                        from app.services.data_generator import generate_and_seed_data
+                        generate_and_seed_data(db, num_stores=5, num_skus=40, days_history=45)
+                        gt_labels = repo.get_ground_truth_for_date(evaluation_date, dataset_id=dataset_id)
+                    except Exception:
+                        pass
+        if not gt_labels:
             print(f"[-] Error: No ground-truth labels found for date '{evaluation_date}' (dataset: {dataset_id or 'default/all'}).")
             available = repo.get_available_ground_truth_dates(dataset_id=dataset_id)
             if available:

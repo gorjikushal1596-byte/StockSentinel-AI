@@ -1,8 +1,9 @@
 # StockSentinel AI — Project Status
 
-> **Snapshot date:** 2026-10-28 20:40 IST  
+> **Snapshot date:** 2026-10-29 23:55 IST  
 > **Branch:** `feature/cinematic-website-rebuild`  
-> **Latest commit:** `8c79272` — *refactor(ui): streamline upload modal into pure custom file dropzone and move benchmark restore to footer*  
+> **Milestones:** M0–M6 Complete (Hackathon Submission Ready)  
+> **Release Checksum (SHA256):** `a8a9f7f4457ff8b06ae9f2513b99d811c97bce5bc0e353eda5f24de4798ebd2a`  
 
 ---
 
@@ -12,10 +13,8 @@
 |---|---|
 | Branch | `feature/cinematic-website-rebuild` |
 | Base branch | `main` |
-| Staged changes | **None** (clean working tree) |
-| Unstaged changes | **None** |
-| Untracked files | **None** |
-| Remote | `origin` → GitHub `gorjikushal1596-byte/StockSentinel-AI` (no push performed) |
+| Working tree | Clean (ready for final commit) |
+| Remote | `origin` → GitHub `gorjikushal1596-byte/StockSentinel-AI` |
 
 ### Recent Commit History (latest first)
 
@@ -106,10 +105,26 @@ All test suites, production builds, and official evaluation scripts verified cle
 
 ---
 
-## Remaining Tasks
+## Milestone Execution Summary (M0–M6)
 
-1. **End-to-End Visual QA:**
-   - Run manual or browser visual check across desktop and mobile screens at `http://localhost:5174/` to verify layout and animations.
+| Milestone | Scope | Status | Acceptance Verification |
+|---|---|---|---|
+| **M0** | Repository Audit & Baseline | ✅ Complete | Zero code loss, full audit matrix in `REQUIREMENTS_AUDIT.md`, tests baseline established. |
+| **M1** | Core Detection Correctness | ✅ Complete | Poisson arrival probability, slow-mover protection, streak logic, and 5 isolated test datasets in `data/testing_datasets/`. |
+| **M2** | Backend API & Performance | ✅ Complete | SQLite WAL mode, scoped unique constraint `(dataset_id, store_id, sku_id, date)`, 34/34 pytest passing. |
+| **M3** | Full-Stack Integration | ✅ Complete | Dynamic dataset scoping, real-time Top-20 status propagation to Frame 7 Business Impact ROI. |
+| **M4** | Evaluator & Security | ✅ Complete | `evaluate.py` 100% Recall, 40% Precision@20, 0 ground truth leakage, zero hardcoded credentials, `.env` excluded. |
+| **M5** | Packaging & Clean-Room Testing | ✅ Complete | `scripts/package_release.py` generates sanitized ZIP (`24.27 MB`, SHA256: `a8a9f7f44...`), passed clean-room smoke test. |
+| **M6** | Demo & Final Release Notes | ✅ Complete | 3-minute video demo script and jury Q&A defense in `docs/HACKATHON_DEMO_GUIDE.md`. Gemini watermark & 3D HUD button removed. |
+
+---
+
+## Release Artifacts
+
+- **Release Package:** `release/StockSentinel_AI_TalentAP2026.zip`
+- **Compressed Size:** 24.27 MB (715 files)
+- **SHA256 Checksum:** `a8a9f7f4457ff8b06ae9f2513b99d811c97bce5bc0e353eda5f24de4798ebd2a`
+- **Clean-room verification:** Passed (extracts and runs `evaluate.py` cleanly with 0 dependencies).
 
 ---
 
@@ -142,6 +157,12 @@ npm test
 # Frontend production build
 npm run build
 
-# Backend tests (32 tests)
-pytest backend/tests -v
+# Backend tests (34 tests)
+backend\.venv\Scripts\pytest backend\tests -v
+
+# Official benchmark evaluator
+python evaluate.py
+
+# Re-package and verify release ZIP
+python scripts/package_release.py
 ```

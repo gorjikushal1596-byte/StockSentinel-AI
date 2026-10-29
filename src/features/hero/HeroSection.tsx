@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
-import { Activity, Eye, Zap, ShieldCheck, Play, Pause, Layers } from 'lucide-react';
+import { Activity, Eye, Zap, ShieldCheck, Play, Pause } from 'lucide-react';
 import { FloatingInventoryPanel } from '@/components/ui/FloatingInventoryPanel';
 import { SalesStockChart } from '@/features/dashboard/SalesStockChart';
 import { DetectionAlertPanel } from '@/components/ui/DetectionAlertPanel';
@@ -18,7 +18,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   const [stage, setStage] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [sceneMode, setSceneMode] = useState<'telemetry-overlay' | 'procedural-3d'>('telemetry-overlay');
+  const sceneMode = 'telemetry-overlay';
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -267,20 +267,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             >
               {isPlaying ? <Pause size={13} /> : <Play size={13} fill="currentColor" />}
               <span>{isPlaying ? 'Pause Video' : 'Play Video'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                setSceneMode((prev) =>
-                  prev === 'telemetry-overlay' ? 'procedural-3d' : 'telemetry-overlay'
-                )
-              }
-              className="hud-ctrl-btn"
-              title="Toggle between Telemetry Overlay and Full 3D Procedural Mode"
-            >
-              <Layers size={13} />
-              <span>{sceneMode === 'telemetry-overlay' ? '3D HUD Mode' : 'Full 3D Mode'}</span>
             </button>
           </div>
         </div>
