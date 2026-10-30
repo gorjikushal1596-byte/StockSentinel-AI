@@ -1,22 +1,24 @@
-# StockSentinel AI synthetic test dataset
+# Saffron Retail Group — Official Hackathon Dataset
 
-Synthetic functional-test data only; not real retail data and not the official benchmark.
+This directory contains the official data package for **R1 — The Phantom Stock-Out Detector** (TalentAP Mega Hackathon 2026).
 
 ## Files
-- `daily_sales_inventory.csv`: 30,000 rows with date, store_id, sku_id, units_sold, on_hand, promotion_active, holiday_flag.
-- `store_master.csv`: store metadata.
-- `sku_master.csv`: product metadata and illustrative unit cost/price.
-- `promotion_calendar.csv`: promotion windows and lift factors.
-- `ground_truth_labels_EVALUATION_ONLY.csv`: planted positive labels for evaluation only. Never include this file as detector input or use it to build features.
 
-## Scope
-120 days (2025-01-01 to 2025-04-30), 5 stores, 50 SKUs. Includes slow-moving products, weekday/seasonal variation, promotion periods, and planted phantom-stock-out intervals.
+- `daily_sales_inventory_sample_2stores.csv`: 110,400 daily inventory and register sales rows (2 stores × 120 days: `STR-BFPW` and `STR-H5GD`).
+- `daily_sales_inventory.parquet`: (Optional full dataset, 7,970,112 rows for all 25 stores). Available in the official pack or external storage.
+- `store_master.csv`: 25 retail stores with store format (`Hyper`, `Market`, `Express`), size in sqft, city, state, city tier (1, 2, 3), and label split (`dev_labelled` / `test_hidden`).
+- `sku_master.csv`: 800 FMCG SKUs across categories with unit price, unit cost, margin, shelf life, and case pack.
+- `promotion_calendar.csv`: 1,789 active promotional campaigns with discount percentages.
+- `holiday_calendar.csv`: 27 Indian national and regional holidays (2025–2026).
+- `dev_labels.csv`: 2,905 public anomaly episodes for the 13 dev stores.
+- `dev_truth.csv`: 24,639 scored store-SKU-days for dev evaluation via `evaluate.py`.
 
-## Suggested workflow
-1. Upload `daily_sales_inventory.csv`.
-2. Optionally upload the store master, SKU master, and promotion calendar as supporting files.
-3. Map `date` -> date, `store_id` -> store, `sku_id` -> SKU, `units_sold` -> sales, `on_hand` -> recorded stock.
-4. Validate, import, then scan a date near the end of the date range.
-5. Use the ground-truth file only via the backend's evaluation-only mechanism.
+## Suggested Workflow
 
-Important: this file contains positive labels only. Do not automatically treat every unlabeled row as a confirmed negative unless the evaluator's label semantics explicitly support that assumption. This dataset is for integration testing, not a valid real-world accuracy claim.
+1. In StockSentinel AI UI, open **Dataset Manager** and click **Restore Saffron Retail Benchmark** (or upload your custom CSV/Parquet dataset).
+2. Execute a scan for dates between `2026-06-04` and `2026-09-30` (e.g. `2026-07-01` or `2026-09-01`).
+3. Inspect the explainable Evidence Passports, physical inspection checklists, and business impact estimates.
+4. Run official benchmark validation:
+   ```bash
+   python evaluate.py --submission submission/R1_predictions_dev.csv --truth data/dev_truth.csv
+   ```

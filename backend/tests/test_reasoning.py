@@ -21,7 +21,7 @@ def setup_test_data():
         from app.services.dataset_service import DatasetService
         svc = DatasetService(db)
         datasets = svc.list_datasets()
-        target_ds = next((d for d in datasets if d.dataset_id.startswith("DS_SYNTHETIC") and d.status == "imported"), None)
+        target_ds = next((d for d in datasets if (d.dataset_id.startswith("DS_SAFFRON") or d.dataset_id.startswith("DS_SYNTHETIC")) and d.status == "imported"), None)
         if not target_ds:
             svc.load_synthetic_dataset()
     finally:
@@ -32,7 +32,7 @@ def test_deep_reasoning_fallback_when_omniroute_disabled():
     """Verify that when OmniRoute is offline or unconfigured, fallback returns cleanly."""
     findings = client.get("/api/findings").json()
     if not findings:
-        client.post("/api/scans", json={"evaluation_date": "2025-04-18", "threshold_days": 3})
+        client.post("/api/scans", json={"evaluation_date": "2026-07-01", "threshold_days": 3})
         findings = client.get("/api/findings").json()
     assert len(findings) > 0
     target_finding_id = findings[0]["finding_id"]

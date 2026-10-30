@@ -61,7 +61,8 @@ htmlcov/
 *.db-wal
 *.sqlite
 *.sqlite3
-stocksentinel.db
+*.parquet
+score.json
 backend/data/uploads/*
 !backend/data/uploads/.gitkeep
 

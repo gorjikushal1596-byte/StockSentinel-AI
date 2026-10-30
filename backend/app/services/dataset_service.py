@@ -427,32 +427,40 @@ class DatasetService:
 
     def load_synthetic_dataset(self) -> tuple[Dataset, ImportResult]:
         """
-        Loads and imports the official synthetic test dataset directly from the project data folder.
+        Loads and imports the official Saffron Retail benchmark dataset directly from the project data folder.
         """
         import shutil
         data_dir = Path("data")
-        if not (data_dir / "daily_sales_inventory.csv").exists():
+        candidate_primary = None
+        for cand in ["daily_sales_inventory_sample_2stores.csv", "daily_sales_inventory.csv", "daily_sales_inventory.parquet"]:
+            if (data_dir / cand).exists():
+                candidate_primary = cand
+                break
+        if not candidate_primary:
             data_dir = Path(__file__).resolve().parent.parent.parent.parent / "data"
-        if not (data_dir / "daily_sales_inventory.csv").exists():
-            data_dir = Path("C:/Users/ASUS/Downloads/StockSentinel_AI_Test_Dataset")
+            for cand in ["daily_sales_inventory_sample_2stores.csv", "daily_sales_inventory.csv", "daily_sales_inventory.parquet"]:
+                if (data_dir / cand).exists():
+                    candidate_primary = cand
+                    break
 
-        if not (data_dir / "daily_sales_inventory.csv").exists():
-            raise FileNotFoundError("Synthetic test dataset files not found in data/ or downloads.")
+        if not candidate_primary:
+            raise FileNotFoundError("Saffron benchmark dataset files not found in data/.")
 
-        dataset_id = f"DS_SYNTHETIC_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        dataset_id = f"DS_SAFFRON_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         upload_dir = get_dataset_storage_dir(dataset_id)
 
         target_files = [
-            ("daily_sales_inventory.csv", "daily_records"),
+            (candidate_primary, "daily_records"),
             ("store_master.csv", "store_master"),
             ("sku_master.csv", "sku_master"),
             ("promotion_calendar.csv", "promo_calendar"),
-            ("ground_truth_labels_EVALUATION_ONLY.csv", "ground_truth"),
+            ("dev_truth.csv", "ground_truth"),
+            ("holiday_calendar.csv", "holiday_calendar"),
         ]
 
         total_size = 0
         file_records = []
-        primary_path = upload_dir / "daily_sales_inventory.csv"
+        primary_path = upload_dir / candidate_primary
 
         for fname, role in target_files:
             src = data_dir / fname
@@ -466,7 +474,7 @@ class DatasetService:
                     DatasetFile(
                         dataset_id=dataset_id,
                         filename=fname,
-                        file_format="CSV",
+                        file_format="CSV" if fname.endswith(".csv") else "PARQUET",
                         file_path=str(dst.resolve()),
                         file_size_bytes=f_size,
                         row_count=count,
@@ -477,21 +485,14 @@ class DatasetService:
 
         profile = profile_raw_dataset(primary_path)
         profile.dataset_id = dataset_id
-        profile.name = "StockSentinel AI Synthetic Benchmark Dataset"
+        profile.name = "Saffron Retail Group Official Benchmark"
 
-        confirmed_mapping = {
-            "date": "date",
-            "store_id": "store_id",
-            "sku_id": "sku_id",
-            "units_sold": "sales",
-            "on_hand": "on_hand_stock",
-            "promotion_active": "is_promotion",
-            "holiday_flag": "is_holiday",
-        }
+        inferred_maps = infer_semantic_mapping([c.name for c in profile.columns])
+        confirmed_mapping = {col: target for col, (target, conf) in inferred_maps.items()}
 
         dataset = Dataset(
             dataset_id=dataset_id,
-            name="StockSentinel AI Synthetic Benchmark Dataset",
+            name="Saffron Retail Group Official Benchmark",
             file_format="MULTI",
             file_path=str(primary_path.resolve()),
             file_size_bytes=total_size,

@@ -30,11 +30,11 @@ def setup_scan_findings():
         from app.services.dataset_service import DatasetService
         svc = DatasetService(db)
         datasets = svc.list_datasets()
-        target_ds = next((d for d in datasets if d.dataset_id.startswith("DS_SYNTHETIC") and d.status == "imported"), None)
+        target_ds = next((d for d in datasets if (d.dataset_id.startswith("DS_SAFFRON") or d.dataset_id.startswith("DS_SYNTHETIC")) and d.status == "imported"), None)
         if not target_ds:
             target_ds, _ = svc.load_synthetic_dataset()
 
-        eval_date = "2025-04-18"
+        eval_date = "2026-07-01"
         scan_res = execute_scan(
             ScanRequest(
                 evaluation_date=eval_date,

@@ -24,6 +24,8 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 RELEASE_DIR = ROOT_DIR / "release"
 ZIP_NAME = "StockSentinel_AI_TalentAP2026.zip"
 ZIP_PATH = RELEASE_DIR / ZIP_NAME
+SUBMISSION_ZIP_NAME = "teamID_R1.zip"
+SUBMISSION_ZIP_PATH = RELEASE_DIR / SUBMISSION_ZIP_NAME
 
 # Exclusion rules
 EXCLUDE_DIRS = {
@@ -108,6 +110,9 @@ def create_release_zip() -> tuple[Path, str, int, int]:
                     file_count += 1
                     total_uncompressed += abs_path.stat().st_size
 
+    # Also generate the official teamID_R1.zip copy for direct submission
+    shutil.copy2(ZIP_PATH, SUBMISSION_ZIP_PATH)
+
     # Compute SHA256
     hasher = hashlib.sha256()
     with open(ZIP_PATH, "rb") as f:
@@ -133,14 +138,19 @@ def verify_clean_room(zip_path: Path) -> bool:
             "vite.config.ts",
             "index.html",
             "evaluate.py",
+            "official_evaluate.py",
             "backend/app/main.py",
             "backend/requirements.txt",
             "backend/.env.example",
-            "data/daily_sales_inventory.csv",
-            "data/ground_truth_labels_EVALUATION_ONLY.csv",
-            "data/testing_datasets/01_case_phantom_stockout.csv",
-            "PROJECT_STATUS.md",
-            "REQUIREMENTS_AUDIT.md",
+            "data/store_master.csv",
+            "data/sku_master.csv",
+            "data/promotion_calendar.csv",
+            "data/holiday_calendar.csv",
+            "data/dev_truth.csv",
+            "data/dev_labels.csv",
+            "data/daily_sales_inventory_sample_2stores.csv",
+            "submission/R1_predictions.csv",
+            "submission/R1_predictions_dev.csv",
             "README.md",
         ]
 
@@ -164,10 +174,10 @@ def verify_clean_room(zip_path: Path) -> bool:
         print("[+] Zero leaked artifacts, databases, or local .env files.")
 
         # 3. Run evaluate.py in clean-room directory
-        print("[*] Running 'python evaluate.py' in clean-room environment...")
+        print("[*] Running 'python evaluate.py --submission submission/R1_predictions_dev.csv --truth data/dev_truth.csv' in clean-room environment...")
         eval_script = temp_dir / "evaluate.py"
         res = subprocess.run(
-            [sys.executable, str(eval_script)],
+            [sys.executable, str(eval_script), "--submission", "submission/R1_predictions_dev.csv", "--truth", "data/dev_truth.csv"],
             cwd=str(temp_dir),
             capture_output=True,
             text=True,
@@ -178,9 +188,9 @@ def verify_clean_room(zip_path: Path) -> bool:
             print(res.stderr)
             return False
 
-        if "Mean Precision@20" in res.stdout and "Overall Recall" in res.stdout:
+        if "PRIMARY  precision@20" in res.stdout:
             print("[+] evaluate.py PASSED in clean-room test! Output verified:")
-            for line in res.stdout.strip().splitlines()[-15:]:
+            for line in res.stdout.strip().splitlines()[-10:]:
                 print(f"    {line}")
         else:
             print(f"[-] Unexpected output from evaluate.py:\n{res.stdout}")
@@ -203,6 +213,7 @@ def main():
 
     print(f"\n[+] Archive created successfully: {zip_path.name}")
     print(f"    Location       : {zip_path}")
+    print(f"    Submission Zip : {SUBMISSION_ZIP_PATH}")
     print(f"    Total files    : {count}")
     print(f"    Uncompressed   : {uncompressed / (1024 * 1024):.2f} MB")
     print(f"    Compressed     : {compressed / (1024 * 1024):.2f} MB")

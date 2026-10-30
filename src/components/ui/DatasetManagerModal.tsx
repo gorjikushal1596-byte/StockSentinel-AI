@@ -690,7 +690,7 @@ export const DatasetManagerModal: React.FC<DatasetManagerModalProps> = ({
                   className="text-cyan-400 hover:text-cyan-300 font-mono underline inline-flex items-center gap-1.5 disabled:opacity-50"
                 >
                   <Sparkles size={12} />
-                  <span>Restore Canonical Benchmark (30,000 rows)</span>
+                  <span>Load Saffron Retail Benchmark (Sample 2 Stores)</span>
                 </button>
               </div>
             </div>

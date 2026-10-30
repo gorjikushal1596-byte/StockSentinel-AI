@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
         from app.services.dataset_service import DatasetService
         svc = DatasetService(db)
         existing = svc.list_datasets()
-        has_benchmark = any(d.dataset_id.startswith("DS_SYNTHETIC") and d.status == "imported" for d in existing)
+        has_benchmark = any((d.dataset_id.startswith("DS_SAFFRON") or d.dataset_id.startswith("DS_SYNTHETIC")) and d.status == "imported" for d in existing)
         if not has_benchmark:
             try:
                 svc.load_synthetic_dataset()

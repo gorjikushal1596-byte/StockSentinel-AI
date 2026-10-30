@@ -20,7 +20,7 @@ def setup_benchmark_dataset():
     try:
         svc = DatasetService(db)
         existing = svc.list_datasets()
-        ds = next((d for d in existing if d.dataset_id.startswith("DS_SYNTHETIC") and d.status == "imported"), None)
+        ds = next((d for d in existing if (d.dataset_id.startswith("DS_SAFFRON") or d.dataset_id.startswith("DS_SYNTHETIC")) and d.status == "imported"), None)
         has_records = False
         if ds:
             from app.db.models import DailyRecord
@@ -28,10 +28,10 @@ def setup_benchmark_dataset():
         if not ds or not has_records:
             ds, _ = svc.load_synthetic_dataset()
 
-        # Run scan for benchmark date 2025-04-18
+        # Run scan for benchmark date 2026-07-01
         scan_res = execute_scan(
             ScanRequest(
-                evaluation_date="2025-04-18",
+                evaluation_date="2026-07-01",
                 threshold_days=3,
                 dataset_id=ds.dataset_id,
             ),
@@ -178,7 +178,7 @@ def test_persist_assumptions_tied_to_dataset_and_scan(setup_benchmark_dataset):
     persist_payload = {
         "dataset_id": dataset_id,
         "scan_id": scan_id,
-        "evaluation_date": "2025-04-18",
+        "evaluation_date": "2026-07-01",
         "days_saved_per_incident": 12.0,
         "recovery_capture_rate": 75.0,
         "gross_margin_percent": 35.0,
