@@ -452,11 +452,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         }
 
         .hero-headline-accent {
-          color: #38bdf8;
-          background: linear-gradient(135deg, #00f2fe 0%, #38bdf8 50%, #60a5fa 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.4));
+          color: #ffffff;
+          -webkit-text-fill-color: #ffffff;
+          background: none;
+          text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 242, 254, 0.25);
+          filter: none;
         }
 
         @media (min-width: 768px) {
